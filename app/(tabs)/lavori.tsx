@@ -82,14 +82,18 @@ export default function LavoriScreen() {
             {sessioni.length === 0 ? (
               <EmptyState icon="📋" title="Nessun turno" subtitle="Tocca + per registrare il tuo primo turno" />
             ) : (
-              sessioni.map((s) => (
-                <SessioneCard
-                  key={s.id}
-                  sessione={s}
-                  nomeAdatore={datori.find((d) => d.id === s.datoreId)?.nome}
-                  onDelete={() => confirmDeleteTurno(s.id)}
-                />
-              ))
+              sessioni.map((s) => {
+                const d = datori.find((d) => d.id === s.datoreId);
+                return (
+                  <SessioneCard
+                    key={s.id}
+                    sessione={s}
+                    nomeAdatore={d?.nome}
+                    coloreDatore={d?.colore}
+                    onDelete={() => confirmDeleteTurno(s.id)}
+                  />
+                );
+              })
             )}
           </>
         )}

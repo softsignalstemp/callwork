@@ -84,7 +84,12 @@ export default function CalendarioScreen() {
             <View style={{ gap: 6, marginBottom: 12 }}>
               <Text style={styles.detailSection}>Sessioni</Text>
               {sessioniGiorno.map((s) => (
-                <SessioneCard key={s.id} sessione={s} nomeAdatore={datori.find((d) => d.id === s.datoreId)?.nome} />
+                <SessioneCard
+                  key={s.id}
+                  sessione={s}
+                  nomeAdatore={datori.find((d) => d.id === s.datoreId)?.nome}
+                  coloreDatore={datori.find((d) => d.id === s.datoreId)?.colore}
+                />
               ))}
             </View>
           )}

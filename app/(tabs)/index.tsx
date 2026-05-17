@@ -144,13 +144,17 @@ export default function HomeScreen() {
           />
         ) : (
           <View style={styles.sessionList}>
-            {ultimeSessioni.map((s) => (
-              <SessioneCard
-                key={s.id}
-                sessione={s}
-                nomeAdatore={datori.find((d) => d.id === s.datoreId)?.nome}
-              />
-            ))}
+            {ultimeSessioni.map((s) => {
+              const d = datori.find((d) => d.id === s.datoreId);
+              return (
+                <SessioneCard
+                  key={s.id}
+                  sessione={s}
+                  nomeAdatore={d?.nome}
+                  coloreDatore={d?.colore}
+                />
+              );
+            })}
           </View>
         )}
       </Animated.View>
