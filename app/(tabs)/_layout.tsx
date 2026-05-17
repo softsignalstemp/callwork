@@ -2,23 +2,44 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 
+type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+
+function TabIcon({ name, nameFocused, color, focused }: {
+  name: IconName; nameFocused: IconName; color: string; focused: boolean;
+}) {
+  return (
+    <View style={styles.iconWrapper}>
+      <MaterialCommunityIcons
+        name={focused ? nameFocused : name}
+        size={26}
+        color={focused ? Colors.primary : Colors.textMuted}
+      />
+      {focused && <View style={styles.activeDot} />}
+    </View>
+  );
+}
+
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textMuted,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { paddingBottom: insets.bottom + 4, height: 64 + insets.bottom }],
         tabBarBackground: () => (
           <View style={StyleSheet.absoluteFill}>
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.surface + 'EE' }]} />
-            <View style={styles.tabTopBorder} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.surface }]} />
+            <View style={styles.topBorder} />
           </View>
         ),
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', letterSpacing: 0.3 },
+        tabBarLabelStyle: styles.label,
+        tabBarItemStyle: styles.tabItem,
       }}
     >
       <Tabs.Screen
@@ -26,9 +47,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconBg : undefined}>
-              <MaterialCommunityIcons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
-            </View>
+            <TabIcon name="home-outline" nameFocused="home" color={color} focused={focused} />
           ),
         }}
       />
@@ -37,9 +56,7 @@ export default function TabLayout() {
         options={{
           title: 'Calendario',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconBg : undefined}>
-              <MaterialCommunityIcons name={focused ? 'calendar-month' : 'calendar-month-outline'} size={24} color={color} />
-            </View>
+            <TabIcon name="calendar-month-outline" nameFocused="calendar-month" color={color} focused={focused} />
           ),
         }}
       />
@@ -48,9 +65,7 @@ export default function TabLayout() {
         options={{
           title: 'Lavori',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconBg : undefined}>
-              <MaterialCommunityIcons name={focused ? 'briefcase' : 'briefcase-outline'} size={24} color={color} />
-            </View>
+            <TabIcon name="briefcase-outline" nameFocused="briefcase" color={color} focused={focused} />
           ),
         }}
       />
@@ -59,9 +74,7 @@ export default function TabLayout() {
         options={{
           title: 'Impostazioni',
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconBg : undefined}>
-              <MaterialCommunityIcons name={focused ? 'cog' : 'cog-outline'} size={24} color={color} />
-            </View>
+            <TabIcon name="cog-outline" nameFocused="cog" color={color} focused={focused} />
           ),
         }}
       />
@@ -74,25 +87,32 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderTopWidth: 0,
     elevation: 0,
-    height: 64,
-    paddingBottom: 8,
   },
-  tabTopBorder: {
+  topBorder: {
     position: 'absolute',
     top: 0,
-    left: 24,
-    right: 24,
-    height: 1,
+    left: 0,
+    right: 0,
+    height: StyleSheet.hairlineWidth,
     backgroundColor: Colors.border,
-    opacity: 0.8,
   },
-  activeIconBg: {
-    backgroundColor: Colors.primary + '22',
-    borderRadius: 10,
-    padding: 4,
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 0 },
+  tabItem: {
+    paddingTop: 10,
+    gap: 4,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  iconWrapper: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.primary,
   },
 });

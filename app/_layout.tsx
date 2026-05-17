@@ -15,12 +15,12 @@ export default function RootLayout() {
   const caricaDati = useLavoriStore((s) => s.caricaDati);
 
   useEffect(() => {
+    // DB init must complete before loading data — both are sync
     hydrate();
-    initDb();
-    caricaDati();
+    initDb();      // sync: creates tables if missing
+    caricaDati();  // sync: reads from now-initialized tables
   }, []);
 
-  // Default to dark theme; respect user toggle
   const theme = darkMode === false ? lightTheme : darkTheme;
 
   return (
