@@ -100,6 +100,7 @@ export default function LavoriScreen() {
         visible
         icon={fabOpen ? 'close' : 'plus'}
         fabStyle={{ backgroundColor: Colors.primary }}
+        backdropColor="rgba(7, 7, 15, 0.75)"
         actions={[
           {
             icon: 'briefcase-plus',
@@ -107,6 +108,7 @@ export default function LavoriScreen() {
             onPress: () => { setFabOpen(false); router.push('/lavori/nuovo-datore'); },
             style: { backgroundColor: Colors.card },
             color: Colors.primary,
+            labelStyle: { backgroundColor: Colors.card, color: Colors.text },
           },
           {
             icon: 'clock-plus',
@@ -114,6 +116,7 @@ export default function LavoriScreen() {
             onPress: () => { setFabOpen(false); router.push('/lavori/registra'); },
             style: { backgroundColor: Colors.card },
             color: Colors.primaryGlow,
+            labelStyle: { backgroundColor: Colors.card, color: Colors.text },
           },
         ]}
         onStateChange={({ open }) => setFabOpen(open)}

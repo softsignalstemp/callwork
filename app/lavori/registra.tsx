@@ -20,15 +20,38 @@ export default function RegistraScreen() {
   const [note, setNote] = useState('');
   const [confermato, setConfermato] = useState(false);
 
+  const [pagaOverrideStr, setPagaOverrideStr] = useState('');
+  const [pagaExpanded, setPagaExpanded] = useState(false);
+
   const datore = datori.find((d) => d.id === datoreId);
-  const pagaOraria = datore?.pagaOraria ?? 0;
+
+  const pagaOraria = useMemo(() => {
+    if (pagaOverrideStr.trim()) {
+      const parsed = parseFloat(pagaOverrideStr.replace(',', '.'));
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
+    return datore?.pagaOraria ?? 0;
+  }, [pagaOverrideStr, datore]);
+
+  const pagaOverrideValida = pagaOverrideStr.trim()
+    ? !isNaN(parseFloat(pagaOverrideStr.replace(',', '.'))) && parseFloat(pagaOverrideStr.replace(',', '.')) > 0
+    : true;
+
+  const isOverride = pagaOverrideStr.trim() !== '' && pagaOverrideValida;
+
   const ore = useMemo(() => calcOre(oraInizio, oraFine), [oraInizio, oraFine]);
   const guadagno = useMemo(() => calcGuadagno(ore, pagaOraria), [ore, pagaOraria]);
+
+  const handleDatoreChange = (id: string) => {
+    setDatoreId(id);
+    setPagaOverrideStr('');
+    setPagaExpanded(false);
+  };
 
   const salva = () => {
     if (!datoreId) { Alert.alert('Nessun datore selezionato', 'Seleziona un datore di lavoro prima di salvare.'); return; }
     if (!isFinite(ore) || ore <= 0) { Alert.alert('Orario non valido', "L'ora di fine deve essere successiva all'inizio."); return; }
-    if (!isFinite(guadagno)) { Alert.alert('Errore', 'Paga oraria non valida.'); return; }
+    if (!pagaOverrideValida) { Alert.alert('Paga non valida', 'Inserisci una paga oraria valida o lascia il campo vuoto per usare la paga base.'); return; }
     aggiungiSessione({ datoreId, data, oraInizio, oraFine, oreTotali: ore, guadagno, note: note.trim() || undefined, confermato });
     router.back();
   };
@@ -36,7 +59,7 @@ export default function RegistraScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
-      {/* ── SEZIONE DATORE ─────────────────────────────── */}
+      {/* ── DATORE ─────────────────────────────────────── */}
       <SectionLabel text="Datore di lavoro" required />
       {datori.length === 0 ? (
         <View style={styles.emptyDatori}>
@@ -59,7 +82,7 @@ export default function RegistraScreen() {
             return (
               <TouchableOpacity
                 key={d.id}
-                onPress={() => setDatoreId(d.id)}
+                onPress={() => handleDatoreChange(d.id)}
                 activeOpacity={0.75}
                 style={[
                   styles.datoreChip,
@@ -69,38 +92,84 @@ export default function RegistraScreen() {
               >
                 <View style={[styles.datoreColorDot, { backgroundColor: d.colore }]} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.datoreNome, { color: selected ? d.colore : Colors.text }]}>
-                    {d.nome}
-                  </Text>
-                  <Text style={styles.datoreRate}>{formatEuro(d.pagaOraria)}/h</Text>
+                  <Text style={[styles.datoreNome, { color: selected ? d.colore : Colors.text }]}>{d.nome}</Text>
+                  <Text style={styles.datoreRate}>{formatEuro(d.pagaOraria)}/h (base)</Text>
                 </View>
-                {selected && (
-                  <MaterialCommunityIcons name="check-circle" size={18} color={d.colore} />
-                )}
+                {selected && <MaterialCommunityIcons name="check-circle" size={18} color={d.colore} />}
               </TouchableOpacity>
             );
           })}
         </View>
       )}
 
-      {/* ── SEZIONE DATA ───────────────────────────────── */}
+      {/* ── PAGA ORARIA (collassabile) ─────────────────── */}
+      {datore && (
+        <>
+          <TouchableOpacity
+            onPress={() => setPagaExpanded((v) => !v)}
+            activeOpacity={0.75}
+            style={styles.pagaRow}
+          >
+            <MaterialCommunityIcons name="cash-clock" size={18} color={isOverride ? Colors.available : Colors.textMuted} />
+            <Text style={styles.pagaBaseLabel}>
+              Paga base: <Text style={styles.pagaBaseValue}>{formatEuro(datore.pagaOraria)}/h</Text>
+            </Text>
+            {isOverride && (
+              <View style={styles.pagaOverrideBadge}>
+                <Text style={styles.pagaOverrideBadgeText}>{formatEuro(pagaOraria)}/h questo turno</Text>
+              </View>
+            )}
+            <MaterialCommunityIcons
+              name={pagaExpanded ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={Colors.textMuted}
+            />
+          </TouchableOpacity>
+
+          {pagaExpanded && (
+            <View style={styles.pagaOverrideBox}>
+              <Text style={styles.pagaOverrideHint}>
+                Lascia vuoto per usare la paga base. Cambia solo se questo turno è pagato diversamente.
+              </Text>
+              <TextInput
+                label="Paga per questo turno (€/h)"
+                value={pagaOverrideStr}
+                onChangeText={setPagaOverrideStr}
+                mode="outlined"
+                keyboardType="decimal-pad"
+                placeholder={String(datore.pagaOraria)}
+                left={<TextInput.Affix text="€" textStyle={{ color: Colors.textSecondary }} />}
+                error={!pagaOverrideValida}
+                textColor={Colors.text}
+                style={{ backgroundColor: Colors.card }}
+                theme={{
+                  colors: {
+                    primary: Colors.available,
+                    outline: Colors.border,
+                    onSurfaceVariant: Colors.textSecondary,
+                    error: Colors.error,
+                  },
+                }}
+              />
+              {pagaOverrideStr.trim() !== '' && (
+                <TouchableOpacity onPress={() => setPagaOverrideStr('')} style={styles.pagaResetBtn}>
+                  <MaterialCommunityIcons name="close-circle-outline" size={14} color={Colors.textMuted} />
+                  <Text style={styles.pagaResetText}>Ripristina paga base</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </>
+      )}
+
+      {/* ── DATA ───────────────────────────────────────── */}
       <SectionLabel text="Data" />
       <DatePickerField value={data} onChange={setData} />
 
-      {/* ── SEZIONE ORARIO ─────────────────────────────── */}
+      {/* ── ORARIO ─────────────────────────────────────── */}
       <SectionLabel text="Orario di lavoro" />
-      <TimePickerField
-        label="Ora inizio"
-        value={oraInizio}
-        onChange={setOraInizio}
-        accent={Colors.primary}
-      />
-      <TimePickerField
-        label="Ora fine"
-        value={oraFine}
-        onChange={setOraFine}
-        accent={Colors.primaryGlow}
-      />
+      <TimePickerField label="Ora inizio" value={oraInizio} onChange={setOraInizio} accent={Colors.primary} />
+      <TimePickerField label="Ora fine" value={oraFine} onChange={setOraFine} accent={Colors.primaryGlow} />
 
       {/* ── RIEPILOGO LIVE ─────────────────────────────── */}
       {ore > 0 && datore ? (
@@ -117,6 +186,7 @@ export default function RegistraScreen() {
           </View>
           <Text style={styles.summaryDetail}>
             {formatEuro(pagaOraria)}/h × {ore.toFixed(2)}h
+            {isOverride && <Text style={{ color: Colors.available }}> (paga modificata)</Text>}
           </Text>
         </LinearGradient>
       ) : ore <= 0 && oraFine <= oraInizio ? (
@@ -126,7 +196,7 @@ export default function RegistraScreen() {
         </View>
       ) : null}
 
-      {/* ── STATO ─────────────────────────────────────── */}
+      {/* ── STATO ──────────────────────────────────────── */}
       <SectionLabel text="Stato pagamento" />
       <View style={styles.statusRow}>
         {[
@@ -155,7 +225,7 @@ export default function RegistraScreen() {
         ))}
       </View>
 
-      {/* ── NOTE ──────────────────────────────────────── */}
+      {/* ── NOTE ───────────────────────────────────────── */}
       <SectionLabel text="Note (opzionale)" />
       <TextInput
         value={note}
@@ -177,7 +247,7 @@ export default function RegistraScreen() {
         }}
       />
 
-      {/* ── AZIONI ────────────────────────────────────── */}
+      {/* ── AZIONI ─────────────────────────────────────── */}
       <View style={styles.actions}>
         <Button
           mode="contained"
@@ -211,12 +281,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surface },
   scroll: { padding: 20, gap: 10, paddingBottom: 40 },
 
-  // Section labels
   sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 12, marginBottom: 6 },
   sectionLabel: { color: Colors.textSecondary, fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase' },
   sectionRequired: { color: Colors.primary, fontSize: 13, fontWeight: '700' },
 
-  // Datori
   emptyDatori: {
     alignItems: 'center',
     backgroundColor: Colors.card,
@@ -241,7 +309,42 @@ const styles = StyleSheet.create({
   datoreNome: { fontSize: 15, fontWeight: '600' },
   datoreRate: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
 
-  // Summary
+  // Paga override
+  pagaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginTop: 4,
+  },
+  pagaBaseLabel: { flex: 1, color: Colors.textSecondary, fontSize: 13 },
+  pagaBaseValue: { color: Colors.text, fontWeight: '600' },
+  pagaOverrideBadge: {
+    backgroundColor: Colors.available + '22',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: Colors.available + '55',
+  },
+  pagaOverrideBadgeText: { color: Colors.available, fontSize: 11, fontWeight: '700' },
+  pagaOverrideBox: {
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.available + '44',
+    padding: 14,
+    gap: 10,
+  },
+  pagaOverrideHint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
+  pagaResetBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
+  pagaResetText: { color: Colors.textMuted, fontSize: 12 },
+
   summary: {
     borderRadius: 16,
     padding: 20,
@@ -257,7 +360,6 @@ const styles = StyleSheet.create({
   summaryGuadagno: { color: Colors.primaryGlow, fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
   summaryDetail: { color: Colors.textMuted, fontSize: 12 },
 
-  // Warning
   warningBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -271,7 +373,6 @@ const styles = StyleSheet.create({
   },
   warningText: { color: Colors.error, fontSize: 13, flex: 1 },
 
-  // Status
   statusRow: { flexDirection: 'row', gap: 10 },
   statusChip: {
     flex: 1,
@@ -287,10 +388,8 @@ const styles = StyleSheet.create({
   },
   statusLabel: { fontSize: 14, fontWeight: '600' },
 
-  // Note
   noteInput: { backgroundColor: Colors.card },
 
-  // Actions
   actions: { gap: 8, marginTop: 8 },
   saveBtn: { borderRadius: 14 },
 });
