@@ -24,7 +24,8 @@ export default function RegistraScreen() {
 
   const salva = () => {
     if (!datoreId) { Alert.alert('Errore', 'Seleziona un datore'); return; }
-    if (ore <= 0) { Alert.alert('Errore', "Orario fine deve essere dopo l'inizio"); return; }
+    if (!isFinite(ore) || ore <= 0) { Alert.alert('Errore', "Orario fine deve essere dopo l'inizio"); return; }
+    if (!isFinite(guadagno)) { Alert.alert('Errore', 'Paga oraria non valida'); return; }
     if (!data.match(/^\d{4}-\d{2}-\d{2}$/)) { Alert.alert('Errore', 'Data non valida (AAAA-MM-GG)'); return; }
     aggiungiSessione({ datoreId, data, oraInizio, oraFine, oreTotali: ore, guadagno, note: note.trim() || undefined, confermato });
     router.back();

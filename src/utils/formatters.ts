@@ -10,8 +10,10 @@ export function formatOre(ore: number): string {
 }
 
 export function calcOre(oraInizio: string, oraFine: string): number {
-  const [ih, im] = oraInizio.split(':').map(Number);
-  const [fh, fm] = oraFine.split(':').map(Number);
+  const parts = (s: string) => s.split(':').map(Number);
+  const [ih, im] = parts(oraInizio);
+  const [fh, fm] = parts(oraFine);
+  if ([ih, im, fh, fm].some((n) => !isFinite(n))) return 0;
   const minuti = (fh * 60 + fm) - (ih * 60 + im);
   return Math.max(0, minuti / 60);
 }

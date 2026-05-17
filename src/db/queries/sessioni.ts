@@ -34,12 +34,14 @@ export function getAllSessioni(): Sessione[] {
 
 export function insertSessione(s: Omit<Sessione, 'creatoIl'>) {
   const now = new Date().toISOString();
+  const oreTotali = isFinite(s.oreTotali) ? s.oreTotali : 0;
+  const guadagno = isFinite(s.guadagno) ? s.guadagno : 0;
   getDb().runSync(
     `INSERT INTO sessioni
       (id, datore_id, lavoro_id, data, ora_inizio, ora_fine, ore_totali, guadagno, note, confermato, creato_il)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [s.id, s.datoreId, s.lavoroId ?? null, s.data, s.oraInizio, s.oraFine,
-     s.oreTotali, s.guadagno, s.note ?? null, s.confermato ? 1 : 0, now]
+     oreTotali, guadagno, s.note ?? null, s.confermato ? 1 : 0, now]
   );
 }
 
