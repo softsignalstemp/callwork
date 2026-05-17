@@ -1,22 +1,50 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
-import { Text, useTheme, IconButton } from 'react-native-paper';
+import { Text, IconButton } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withDelay,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLavoriStore } from '@/store/useLavoriStore';
 import { useMonthlyStats } from '@/hooks/useMonthlyStats';
 import { StatCard } from '@/components/ui/StatCard';
+import { GlassCard } from '@/components/ui/GlassCard';
 import { SessioneCard } from '@/components/jobs/SessioneCard';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
+import { RingChart } from '@/components/charts/RingChart';
+import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { formatEuro, formatOre, monthLabel, prevMonth, nextMonth } from '@/utils/formatters';
-import { BarChart } from '@/components/charts/BarChart';
 import { Colors } from '@/constants/colors';
 
+function useFadeSlide(delayMs = 0) {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(24);
+
+  useEffect(() => {
+    opacity.value = withDelay(delayMs, withTiming(1, { duration: 500 }));
+    translateY.value = withDelay(delayMs, withSpring(0, { damping: 18 }));
+  }, []);
+
+  return useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ translateY: translateY.value }] }));
+}
+
 export default function HomeScreen() {
-  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { meseSelezionato, cambiaMese, datori, sessioni, caricaDati } = useLavoriStore();
   const stats = useMonthlyStats();
   const [refreshing, setRefreshing] = React.useState(false);
+
+  const heroStyle = useFadeSlide(0);
+  const statsStyle = useFadeSlide(120);
+  const chartStyle = useFadeSlide(220);
+  const ringStyle = useFadeSlide(320);
+  const listStyle = useFadeSlide(400);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -24,98 +52,178 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
+  const ringSegments = Object.entries(stats.perDatore).map(([, d]) => ({
+    label: d.nome,
+    value: d.guadagno,
+    color: d.colore,
+  }));
+
   const ultimeSessioni = sessioni.slice(0, 5);
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={{ paddingBottom: 32, paddingTop: insets.top }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+      }
     >
-      {/* Header mese */}
-      <View style={styles.header}>
-        <IconButton icon="chevron-left" onPress={() => cambiaMese(prevMonth(meseSelezionato))} />
-        <Text variant="titleLarge" style={{ color: theme.colors.onBackground, fontWeight: '700', textTransform: 'capitalize' }}>
-          {monthLabel(meseSelezionato)}
-        </Text>
-        <IconButton icon="chevron-right" onPress={() => cambiaMese(nextMonth(meseSelezionato))} />
-      </View>
-
-      {/* Guadagno principale */}
-      <View style={styles.mainCard}>
-        <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
-          Guadagnato questo mese
-        </Text>
-        <Text variant="displaySmall" style={{ color: theme.colors.primary, fontWeight: '800' }}>
-          {formatEuro(stats.totaleGuadagnato)}
-        </Text>
-      </View>
-
-      {/* Stat cards */}
-      <View style={styles.statsRow}>
-        <StatCard icon="🕐" value={formatOre(stats.oreTotali)} label="Ore lavorate" />
-        <StatCard icon="📅" value={String(stats.giorniLavorati)} label="Giorni lavorati" />
-      </View>
-
-      {/* Bar chart ultimi 7 giorni */}
-      {stats.last7Days.some((d) => d.guadagno > 0) && (
-        <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-          <Text variant="titleSmall" style={{ color: theme.colors.onSurface, marginBottom: 12, fontWeight: '700' }}>
-            Ultimi 7 giorni
-          </Text>
-          <BarChart data={stats.last7Days} color={Colors.primary} />
+      {/* ── HERO HEADER ── */}
+      <LinearGradient
+        colors={[Colors.primaryMuted + 'CC', Colors.bg]}
+        style={[styles.hero, { paddingTop: insets.top + 16 }]}
+        start={{ x: 0.3, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      >
+        {/* Month nav */}
+        <View style={styles.monthRow}>
+          <IconButton
+            icon="chevron-left"
+            iconColor={Colors.textSecondary}
+            onPress={() => cambiaMese(prevMonth(meseSelezionato))}
+          />
+          <Text style={styles.monthLabel}>{monthLabel(meseSelezionato)}</Text>
+          <IconButton
+            icon="chevron-right"
+            iconColor={Colors.textSecondary}
+            onPress={() => cambiaMese(nextMonth(meseSelezionato))}
+          />
         </View>
-      )}
 
-      {/* Per datore */}
-      {Object.keys(stats.perDatore).length > 0 && (
-        <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-          <Text variant="titleSmall" style={{ color: theme.colors.onSurface, marginBottom: 8, fontWeight: '700' }}>
-            Per datore
-          </Text>
-          {Object.entries(stats.perDatore).map(([id, d]) => (
-            <View key={id} style={styles.datoreRow}>
-              <View style={[styles.dot, { backgroundColor: d.colore }]} />
-              <Text variant="bodyMedium" style={{ flex: 1, color: theme.colors.onSurface }}>{d.nome}</Text>
-              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>{formatOre(d.ore)}</Text>
-              <Text variant="labelLarge" style={{ color: theme.colors.primary, minWidth: 72, textAlign: 'right' }}>
-                {formatEuro(d.guadagno)}
-              </Text>
-            </View>
-          ))}
-        </View>
-      )}
+        {/* Main earnings */}
+        <Animated.View style={[styles.heroEarnings, heroStyle]}>
+          <Text style={styles.heroLabel}>Guadagnato questo mese</Text>
+          <AnimatedCounter
+            value={stats.totaleGuadagnato}
+            format={formatEuro}
+            style={styles.heroAmount}
+          />
+          <View style={styles.heroDivider} />
+        </Animated.View>
+      </LinearGradient>
 
-      {/* Sessioni recenti */}
-      <View style={styles.sectionHeader}>
-        <Text variant="titleSmall" style={{ color: theme.colors.onBackground, fontWeight: '700' }}>
-          Sessioni recenti
-        </Text>
-      </View>
-      {ultimeSessioni.length === 0 ? (
-        <EmptyState icon="📋" title="Nessuna sessione" subtitle="Vai su Lavori per registrare la prima" />
-      ) : (
-        <View style={{ paddingHorizontal: 16, gap: 4 }}>
-          {ultimeSessioni.map((s) => (
-            <SessioneCard
-              key={s.id}
-              sessione={s}
-              nomeAdatore={datori.find((d) => d.id === s.datoreId)?.nome}
+      {/* ── STAT CARDS ── */}
+      <Animated.View style={[styles.statsRow, statsStyle]}>
+        <StatCard
+          icon="⏱"
+          value={formatOre(stats.oreTotali)}
+          label="Ore lavorate"
+          accent={Colors.primary}
+        />
+        <StatCard
+          icon="📅"
+          value={String(stats.giorniLavorati)}
+          label="Giorni lavorati"
+          accent={Colors.confirmed}
+        />
+      </Animated.View>
+
+      {/* ── BAR CHART ── */}
+      <Animated.View style={chartStyle}>
+        <GlassCard style={styles.section} glow>
+          <Text style={styles.sectionTitle}>Ultimi 7 giorni</Text>
+          <AnimatedBarChart data={stats.last7Days} />
+        </GlassCard>
+      </Animated.View>
+
+      {/* ── RING CHART ── */}
+      {ringSegments.length > 0 && (
+        <Animated.View style={ringStyle}>
+          <GlassCard style={styles.section}>
+            <Text style={styles.sectionTitle}>Per datore</Text>
+            <RingChart
+              segments={ringSegments}
+              centerLabel="totale"
+              centerValue={formatEuro(stats.totaleGuadagnato)}
             />
-          ))}
-        </View>
+          </GlassCard>
+        </Animated.View>
       )}
+
+      {/* ── SESSIONI RECENTI ── */}
+      <Animated.View style={listStyle}>
+        <Text style={styles.sectionTitle2}>Sessioni recenti</Text>
+        {ultimeSessioni.length === 0 ? (
+          <EmptyState
+            icon="📋"
+            title="Nessuna sessione"
+            subtitle="Vai su Lavori per registrare la prima sessione"
+          />
+        ) : (
+          <View style={{ paddingHorizontal: 16, gap: 4 }}>
+            {ultimeSessioni.map((s) => (
+              <SessioneCard
+                key={s.id}
+                sessione={s}
+                nomeAdatore={datori.find((d) => d.id === s.datoreId)?.nome}
+              />
+            ))}
+          </View>
+        )}
+      </Animated.View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
-  mainCard: { alignItems: 'center', paddingVertical: 24, gap: 4 },
-  statsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginBottom: 16 },
-  section: { marginHorizontal: 16, borderRadius: 16, padding: 16, marginBottom: 12 },
-  sectionHeader: { paddingHorizontal: 16, marginBottom: 8 },
-  datoreRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
+  container: { flex: 1, backgroundColor: Colors.bg },
+
+  hero: { paddingHorizontal: 8, paddingBottom: 24 },
+  monthRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  monthLabel: {
+    color: Colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+    minWidth: 180,
+    textAlign: 'center',
+  },
+
+  heroEarnings: { alignItems: 'center', gap: 6, paddingHorizontal: 24 },
+  heroLabel: { color: Colors.textSecondary, fontSize: 13, letterSpacing: 0.5 },
+  heroAmount: {
+    color: Colors.text,
+    fontSize: 44,
+    fontWeight: '900',
+    letterSpacing: -1.5,
+    textShadowColor: Colors.primary,
+    textShadowRadius: 20,
+    textShadowOffset: { width: 0, height: 0 },
+  } as any,
+  heroDivider: {
+    width: 60,
+    height: 2,
+    backgroundColor: Colors.primary,
+    borderRadius: 1,
+    marginTop: 4,
+    opacity: 0.7,
+  },
+
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    marginTop: 20,
+    marginBottom: 4,
+  },
+
+  section: { margin: 16, padding: 20, marginBottom: 0 },
+  sectionTitle: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginBottom: 16,
+    textTransform: 'uppercase',
+  },
+  sectionTitle2: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    paddingHorizontal: 16,
+    marginTop: 20,
+    marginBottom: 10,
+  },
 });

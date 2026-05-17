@@ -1,16 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
-import { Text, TextInput, Button, useTheme, SegmentedButtons, Chip } from 'react-native-paper';
+import { Text, TextInput, Button, SegmentedButtons, Chip } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useLavoriStore } from '@/store/useLavoriStore';
 import { calcOre, calcGuadagno, formatEuro, formatOre, today } from '@/utils/formatters';
+import { Colors } from '@/constants/colors';
 
 export default function RegistraScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const { datori, aggiungiSessione } = useLavoriStore();
 
-  const [datoreId, setDatoreId] = useState<string>('');
+  const [datoreId, setDatoreId] = useState('');
   const [data, setData] = useState(today());
   const [oraInizio, setOraInizio] = useState('08:00');
   const [oraFine, setOraFine] = useState('12:00');
@@ -23,43 +23,21 @@ export default function RegistraScreen() {
   const guadagno = useMemo(() => calcGuadagno(ore, pagaOraria), [ore, pagaOraria]);
 
   const salva = () => {
-    if (!datoreId) {
-      Alert.alert('Errore', 'Seleziona un datore di lavoro');
-      return;
-    }
-    if (ore <= 0) {
-      Alert.alert('Errore', "L'orario di fine deve essere successivo all'inizio");
-      return;
-    }
-    if (!data.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      Alert.alert('Errore', 'Data non valida (usa il formato AAAA-MM-GG)');
-      return;
-    }
-
-    aggiungiSessione({
-      datoreId,
-      data,
-      oraInizio,
-      oraFine,
-      oreTotali: ore,
-      guadagno,
-      note: note.trim() || undefined,
-      confermato,
-    });
+    if (!datoreId) { Alert.alert('Errore', 'Seleziona un datore'); return; }
+    if (ore <= 0) { Alert.alert('Errore', "Orario fine deve essere dopo l'inizio"); return; }
+    if (!data.match(/^\d{4}-\d{2}-\d{2}$/)) { Alert.alert('Errore', 'Data non valida (AAAA-MM-GG)'); return; }
+    aggiungiSessione({ datoreId, data, oraInizio, oraFine, oreTotali: ore, guadagno, note: note.trim() || undefined, confermato });
     router.back();
   };
 
+  const inputTheme = { colors: { onSurfaceVariant: Colors.textSecondary, primary: Colors.primary, outline: Colors.border, background: Colors.surface } };
+
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView style={styles.container}>
       <View style={styles.content}>
-        {/* Selezione datore */}
-        <Text variant="labelLarge" style={{ color: theme.colors.onSurface }}>
-          Datore di lavoro *
-        </Text>
+        <Text style={styles.sectionLabel}>Datore di lavoro *</Text>
         {datori.length === 0 ? (
-          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-            Nessun datore disponibile. Aggiungine uno prima.
-          </Text>
+          <Text style={{ color: Colors.textSecondary }}>Nessun datore. Aggiungine uno prima.</Text>
         ) : (
           <View style={styles.chipRow}>
             {datori.map((d) => (
@@ -67,8 +45,13 @@ export default function RegistraScreen() {
                 key={d.id}
                 selected={datoreId === d.id}
                 onPress={() => setDatoreId(d.id)}
-                style={{ backgroundColor: datoreId === d.id ? d.colore + '33' : undefined }}
+                style={{
+                  backgroundColor: datoreId === d.id ? d.colore + '33' : Colors.card,
+                  borderColor: datoreId === d.id ? d.colore : Colors.border,
+                  borderWidth: 1,
+                }}
                 selectedColor={d.colore}
+                textStyle={{ color: datoreId === d.id ? d.colore : Colors.textSecondary }}
               >
                 {d.nome}
               </Chip>
@@ -77,12 +60,11 @@ export default function RegistraScreen() {
         )}
 
         {datore && (
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+          <Text style={{ color: Colors.textSecondary, fontSize: 12 }}>
             Paga: {formatEuro(datore.pagaOraria)}/h
           </Text>
         )}
 
-        {/* Data */}
         <TextInput
           label="Data *"
           value={data}
@@ -90,41 +72,42 @@ export default function RegistraScreen() {
           mode="outlined"
           placeholder="AAAA-MM-GG"
           keyboardType="numeric"
+          theme={inputTheme}
+          textColor={Colors.text}
         />
 
-        {/* Orari */}
-        <View style={styles.row}>
+        <View style={styles.timeRow}>
           <TextInput
-            label="Ora inizio"
+            label="Inizio"
             value={oraInizio}
             onChangeText={setOraInizio}
             mode="outlined"
-            placeholder="08:00"
             style={styles.timeInput}
             keyboardType="numeric"
+            theme={inputTheme}
+            textColor={Colors.text}
           />
-          <Text variant="headlineSmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 16 }}>—</Text>
+          <Text style={styles.dash}>—</Text>
           <TextInput
-            label="Ora fine"
+            label="Fine"
             value={oraFine}
             onChangeText={setOraFine}
             mode="outlined"
-            placeholder="12:00"
             style={styles.timeInput}
             keyboardType="numeric"
+            theme={inputTheme}
+            textColor={Colors.text}
           />
         </View>
 
-        {/* Riepilogo calcolato */}
         {ore > 0 && datore && (
-          <View style={[styles.summary, { backgroundColor: theme.colors.primaryContainer }]}>
-            <Text variant="titleMedium" style={{ color: theme.colors.onPrimaryContainer, fontWeight: '700' }}>
-              Totale: {formatOre(ore)} = {formatEuro(guadagno)}
+          <View style={[styles.summary, { borderColor: Colors.primary + '55' }]}>
+            <Text style={[styles.summaryText, { color: Colors.primaryGlow }]}>
+              {formatOre(ore)}  =  {formatEuro(guadagno)}
             </Text>
           </View>
         )}
 
-        {/* Note */}
         <TextInput
           label="Note (opzionale)"
           value={note}
@@ -132,9 +115,10 @@ export default function RegistraScreen() {
           mode="outlined"
           multiline
           numberOfLines={3}
+          theme={inputTheme}
+          textColor={Colors.text}
         />
 
-        {/* Confermato */}
         <SegmentedButtons
           value={confermato ? 'si' : 'no'}
           onValueChange={(v) => setConfermato(v === 'si')}
@@ -142,22 +126,32 @@ export default function RegistraScreen() {
             { value: 'no', label: 'In attesa' },
             { value: 'si', label: '✓ Confermato' },
           ]}
+          theme={{ colors: { secondaryContainer: Colors.primaryMuted, onSecondaryContainer: Colors.primaryGlow } }}
         />
 
-        <Button mode="contained" onPress={salva} style={{ marginTop: 8 }}>
+        <Button mode="contained" onPress={salva} buttonColor={Colors.primary} textColor="#fff">
           Salva sessione
         </Button>
-        <Button onPress={() => router.back()}>Annulla</Button>
+        <Button onPress={() => router.back()} textColor={Colors.textSecondary}>Annulla</Button>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: Colors.surface },
   content: { padding: 20, gap: 16 },
+  sectionLabel: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   timeInput: { flex: 1 },
-  summary: { borderRadius: 12, padding: 16, alignItems: 'center' },
+  dash: { color: Colors.textMuted, fontSize: 20, marginTop: 8 },
+  summary: {
+    backgroundColor: Colors.primaryMuted,
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  summaryText: { fontSize: 20, fontWeight: '800', letterSpacing: -0.5 },
 });

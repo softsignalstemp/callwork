@@ -5,9 +5,10 @@ import { PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { lightTheme, darkTheme } from '@/theme';
+import { darkTheme, lightTheme } from '@/theme';
 import { initDb } from '@/db/schema';
 import { useLavoriStore } from '@/store/useLavoriStore';
+import { Colors } from '@/constants/colors';
 
 export default function RootLayout() {
   const { darkMode, hydrate } = useSettingsStore();
@@ -19,20 +20,45 @@ export default function RootLayout() {
     caricaDati();
   }, []);
 
+  // Default to dark theme; respect user toggle
+  const theme = darkMode === false ? lightTheme : darkTheme;
+
   return (
     <GestureHandlerRootView style={styles.root}>
-      <PaperProvider theme={darkMode ? darkTheme : lightTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
+      <PaperProvider theme={theme}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: Colors.bg },
+          }}
+        >
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="lavori/registra" options={{ presentation: 'modal', headerShown: true, title: 'Registra lavoro' }} />
-          <Stack.Screen name="lavori/nuovo-datore" options={{ presentation: 'modal', headerShown: true, title: 'Nuovo datore' }} />
-          <Stack.Screen name="lavori/[id]" options={{ presentation: 'modal', headerShown: true, title: 'Dettaglio sessione' }} />
+          <Stack.Screen
+            name="lavori/registra"
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+              title: 'Registra lavoro',
+              headerStyle: { backgroundColor: Colors.surface },
+              headerTintColor: Colors.text,
+              headerShadowVisible: false,
+            }}
+          />
+          <Stack.Screen
+            name="lavori/nuovo-datore"
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+              title: 'Nuovo datore',
+              headerStyle: { backgroundColor: Colors.surface },
+              headerTintColor: Colors.text,
+              headerShadowVisible: false,
+            }}
+          />
         </Stack>
       </PaperProvider>
     </GestureHandlerRootView>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-});
+const styles = StyleSheet.create({ root: { flex: 1 } });

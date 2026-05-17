@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Surface, Text, useTheme, IconButton } from 'react-native-paper';
+import { Text, IconButton } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors } from '@/constants/colors';
 import { formatEuro } from '@/utils/formatters';
 import type { Datore } from '@/db/types';
 
@@ -13,45 +15,64 @@ interface DatoreCardProps {
 }
 
 export function DatoreCard({ datore, guadagnoMese = 0, numSessioni = 0, onPress, onDelete }: DatoreCardProps) {
-  const theme = useTheme();
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-      <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <View style={[styles.colorBar, { backgroundColor: datore.colore }]} />
-        <View style={styles.info}>
-          <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '700' }}>
-            {datore.nome}
-          </Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            {formatEuro(datore.pagaOraria)}/h · {numSessioni} sessioni
-          </Text>
-          <Text variant="labelMedium" style={{ color: theme.colors.primary }}>
-            Questo mese: {formatEuro(guadagnoMese)}
+    <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={[styles.card, { shadowColor: datore.colore }]}>
+      <LinearGradient
+        colors={[datore.colore + '18', Colors.card]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={[styles.colorBar, { backgroundColor: datore.colore }]} />
+      <View style={styles.info}>
+        <View style={styles.row}>
+          <Text style={styles.nome}>{datore.nome}</Text>
+          <View style={[styles.pill, { backgroundColor: datore.colore + '33' }]}>
+            <Text style={[styles.pillText, { color: datore.colore }]}>
+              {formatEuro(datore.pagaOraria)}/h
+            </Text>
+          </View>
+        </View>
+        <View style={styles.stats}>
+          <Text style={styles.stat}>{numSessioni} sessioni</Text>
+          <Text style={[styles.guadagno, { color: datore.colore }]}>
+            {formatEuro(guadagnoMese)} questo mese
           </Text>
         </View>
-        {onDelete && (
-          <IconButton icon="delete-outline" size={20} onPress={onDelete} iconColor={theme.colors.error} />
-        )}
-      </Surface>
+      </View>
+      {onDelete && (
+        <IconButton
+          icon="delete-outline"
+          size={18}
+          iconColor={Colors.textMuted}
+          onPress={onDelete}
+        />
+      )}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    marginVertical: 6,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.border,
     flexDirection: 'row',
     alignItems: 'center',
+    marginVertical: 5,
     overflow: 'hidden',
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 6,
   },
-  colorBar: {
-    width: 6,
-    alignSelf: 'stretch',
-  },
-  info: {
-    flex: 1,
-    padding: 14,
-    gap: 3,
-  },
+  colorBar: { width: 4, alignSelf: 'stretch' },
+  info: { flex: 1, padding: 14, gap: 6 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  nome: { color: Colors.text, fontWeight: '700', fontSize: 15, flex: 1 },
+  pill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
+  pillText: { fontSize: 12, fontWeight: '700' },
+  stats: { flexDirection: 'row', gap: 16, alignItems: 'center' },
+  stat: { color: Colors.textMuted, fontSize: 12 },
+  guadagno: { fontWeight: '700', fontSize: 13 },
 });

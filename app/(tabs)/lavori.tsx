@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
-import { Text, useTheme, FAB, SegmentedButtons, Divider } from 'react-native-paper';
+import { Text, FAB, SegmentedButtons } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLavoriStore } from '@/store/useLavoriStore';
 import { useMonthlyStats } from '@/hooks/useMonthlyStats';
 import { DatoreCard } from '@/components/jobs/DatoreCard';
 import { SessioneCard } from '@/components/jobs/SessioneCard';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Colors } from '@/constants/colors';
 
 type TabValue = 'datori' | 'sessioni';
 
 export default function LavoriScreen() {
-  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { datori, sessioni, rimuoviDatore, rimuoviSessione } = useLavoriStore();
@@ -38,11 +39,13 @@ export default function LavoriScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 8 }}>
-        <Text variant="headlineSmall" style={{ color: theme.colors.onBackground, fontWeight: '800', marginBottom: 12 }}>
-          Lavori
-        </Text>
+    <View style={styles.container}>
+      {/* Header */}
+      <LinearGradient
+        colors={[Colors.primaryMuted + '88', Colors.bg]}
+        style={[styles.header, { paddingTop: insets.top + 16 }]}
+      >
+        <Text style={styles.title}>Lavori</Text>
         <SegmentedButtons
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as TabValue)}
@@ -50,27 +53,31 @@ export default function LavoriScreen() {
             { value: 'datori', label: 'Datori' },
             { value: 'sessioni', label: 'Sessioni' },
           ]}
+          style={styles.tabs}
+          theme={{
+            colors: {
+              secondaryContainer: Colors.primaryMuted,
+              onSecondaryContainer: Colors.primaryGlow,
+            },
+          }}
         />
-      </View>
+      </LinearGradient>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
         {activeTab === 'datori' && (
           <>
             {datori.length === 0 ? (
-              <EmptyState icon="🏢" title="Nessun datore" subtitle="Tocca + per aggiungere il primo datore di lavoro" />
+              <EmptyState icon="🏢" title="Nessun datore" subtitle="Tocca + per aggiungere il primo datore" />
             ) : (
-              datori.map((d) => {
-                const perDatoreStats = stats.perDatore[d.id];
-                return (
-                  <DatoreCard
-                    key={d.id}
-                    datore={d}
-                    guadagnoMese={perDatoreStats?.guadagno ?? 0}
-                    numSessioni={sessioni.filter((s) => s.datoreId === d.id).length}
-                    onDelete={() => confirmDeleteDatore(d.id, d.nome)}
-                  />
-                );
-              })
+              datori.map((d) => (
+                <DatoreCard
+                  key={d.id}
+                  datore={d}
+                  guadagnoMese={stats.perDatore[d.id]?.guadagno ?? 0}
+                  numSessioni={sessioni.filter((s) => s.datoreId === d.id).length}
+                  onDelete={() => confirmDeleteDatore(d.id, d.nome)}
+                />
+              ))
             )}
           </>
         )}
@@ -97,16 +104,21 @@ export default function LavoriScreen() {
         open={false}
         visible
         icon="plus"
+        fabStyle={{ backgroundColor: Colors.primary }}
         actions={[
           {
             icon: 'briefcase-plus',
             label: 'Nuovo datore',
             onPress: () => router.push('/lavori/nuovo-datore'),
+            style: { backgroundColor: Colors.card },
+            color: Colors.primary,
           },
           {
             icon: 'clock-plus',
             label: 'Registra lavoro',
             onPress: () => router.push('/lavori/registra'),
+            style: { backgroundColor: Colors.card },
+            color: Colors.primaryGlow,
           },
         ]}
         onStateChange={() => {}}
@@ -117,5 +129,8 @@ export default function LavoriScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: Colors.bg },
+  header: { paddingHorizontal: 20, paddingBottom: 20, gap: 16 },
+  title: { color: Colors.text, fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  tabs: { borderColor: Colors.border },
 });
