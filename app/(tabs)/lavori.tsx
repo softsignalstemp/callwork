@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
-import { Text, FAB, SegmentedButtons } from 'react-native-paper';
+import { Text, FAB } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +9,7 @@ import { useMonthlyStats } from '@/hooks/useMonthlyStats';
 import { DatoreCard } from '@/components/jobs/DatoreCard';
 import { SessioneCard } from '@/components/jobs/SessioneCard';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { LiquidGlassSegmented } from '@/components/ui/LiquidGlassSegmented';
 import { Colors } from '@/constants/colors';
 
 type TabValue = 'datori' | 'turni';
@@ -47,20 +48,13 @@ export default function LavoriScreen() {
         style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
         <Text style={styles.title}>Lavori</Text>
-        <SegmentedButtons
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as TabValue)}
-          buttons={[
-            { value: 'datori', label: 'Datori' },
-            { value: 'turni', label: 'Turni' },
+        <LiquidGlassSegmented
+          options={[
+            { value: 'datori', label: 'Datori', icon: 'domain' },
+            { value: 'turni', label: 'Turni', icon: 'clock-outline' },
           ]}
-          style={styles.tabs}
-          theme={{
-            colors: {
-              secondaryContainer: Colors.primaryMuted,
-              onSecondaryContainer: Colors.primaryGlow,
-            },
-          }}
+          value={activeTab}
+          onChange={setActiveTab}
         />
       </LinearGradient>
 
@@ -131,7 +125,6 @@ export default function LavoriScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
-  header: { paddingHorizontal: 20, paddingBottom: 20, gap: 16 },
+  header: { paddingHorizontal: 20, paddingBottom: 20, gap: 14 },
   title: { color: Colors.text, fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
-  tabs: { borderColor: Colors.border },
 });
