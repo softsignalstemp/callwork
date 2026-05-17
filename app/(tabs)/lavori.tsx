@@ -11,7 +11,7 @@ import { SessioneCard } from '@/components/jobs/SessioneCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Colors } from '@/constants/colors';
 
-type TabValue = 'datori' | 'sessioni';
+type TabValue = 'datori' | 'turni';
 
 export default function LavoriScreen() {
   const insets = useSafeAreaInsets();
@@ -19,11 +19,12 @@ export default function LavoriScreen() {
   const { datori, sessioni, rimuoviDatore, rimuoviSessione } = useLavoriStore();
   const stats = useMonthlyStats();
   const [activeTab, setActiveTab] = useState<TabValue>('datori');
+  const [fabOpen, setFabOpen] = useState(false);
 
   const confirmDeleteDatore = (id: string, nome: string) => {
     Alert.alert(
       'Elimina datore',
-      `Eliminare "${nome}" e tutte le sue sessioni?`,
+      `Eliminare "${nome}" e tutti i suoi turni?`,
       [
         { text: 'Annulla', style: 'cancel' },
         { text: 'Elimina', style: 'destructive', onPress: () => rimuoviDatore(id) },
@@ -31,8 +32,8 @@ export default function LavoriScreen() {
     );
   };
 
-  const confirmDeleteSessione = (id: string) => {
-    Alert.alert('Elimina sessione', 'Eliminare questa sessione?', [
+  const confirmDeleteTurno = (id: string) => {
+    Alert.alert('Elimina turno', 'Eliminare questo turno?', [
       { text: 'Annulla', style: 'cancel' },
       { text: 'Elimina', style: 'destructive', onPress: () => rimuoviSessione(id) },
     ]);
@@ -51,7 +52,7 @@ export default function LavoriScreen() {
           onValueChange={(v) => setActiveTab(v as TabValue)}
           buttons={[
             { value: 'datori', label: 'Datori' },
-            { value: 'sessioni', label: 'Sessioni' },
+            { value: 'turni', label: 'Turni' },
           ]}
           style={styles.tabs}
           theme={{
@@ -63,7 +64,7 @@ export default function LavoriScreen() {
         />
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 110 + insets.bottom }}>
         {activeTab === 'datori' && (
           <>
             {datori.length === 0 ? (
@@ -82,17 +83,17 @@ export default function LavoriScreen() {
           </>
         )}
 
-        {activeTab === 'sessioni' && (
+        {activeTab === 'turni' && (
           <>
             {sessioni.length === 0 ? (
-              <EmptyState icon="📋" title="Nessuna sessione" subtitle="Tocca + per registrare il tuo primo lavoro" />
+              <EmptyState icon="📋" title="Nessun turno" subtitle="Tocca + per registrare il tuo primo turno" />
             ) : (
               sessioni.map((s) => (
                 <SessioneCard
                   key={s.id}
                   sessione={s}
                   nomeAdatore={datori.find((d) => d.id === s.datoreId)?.nome}
-                  onDelete={() => confirmDeleteSessione(s.id)}
+                  onDelete={() => confirmDeleteTurno(s.id)}
                 />
               ))
             )}
@@ -101,28 +102,28 @@ export default function LavoriScreen() {
       </ScrollView>
 
       <FAB.Group
-        open={false}
+        open={fabOpen}
         visible
-        icon="plus"
+        icon={fabOpen ? 'close' : 'plus'}
         fabStyle={{ backgroundColor: Colors.primary }}
         actions={[
           {
             icon: 'briefcase-plus',
             label: 'Nuovo datore',
-            onPress: () => router.push('/lavori/nuovo-datore'),
+            onPress: () => { setFabOpen(false); router.push('/lavori/nuovo-datore'); },
             style: { backgroundColor: Colors.card },
             color: Colors.primary,
           },
           {
             icon: 'clock-plus',
-            label: 'Registra lavoro',
-            onPress: () => router.push('/lavori/registra'),
+            label: 'Registra turno',
+            onPress: () => { setFabOpen(false); router.push('/lavori/registra'); },
             style: { backgroundColor: Colors.card },
             color: Colors.primaryGlow,
           },
         ]}
-        onStateChange={() => {}}
-        style={{ bottom: insets.bottom + 64 }}
+        onStateChange={({ open }) => setFabOpen(open)}
+        style={{ bottom: insets.bottom + 80 }}
       />
     </View>
   );

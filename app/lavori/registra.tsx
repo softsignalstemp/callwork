@@ -130,7 +130,7 @@ export default function RegistraScreen() {
         />
 
         <Button mode="contained" onPress={salva} buttonColor={Colors.primary} textColor="#fff">
-          Salva sessione
+          Salva turno
         </Button>
         <Button onPress={() => router.back()} textColor={Colors.textSecondary}>Annulla</Button>
       </View>

@@ -87,7 +87,7 @@ export default function ImpostazioniScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}>
       {/* Header */}
       <LinearGradient
         colors={[Colors.primaryMuted + '88', Colors.bg]}

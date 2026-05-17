@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -16,6 +16,7 @@ import { useLavoriStore } from '@/store/useLavoriStore';
 import { useMonthlyStats } from '@/hooks/useMonthlyStats';
 import { StatCard } from '@/components/ui/StatCard';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { GlassButton } from '@/components/ui/GlassButton';
 import { SessioneCard } from '@/components/jobs/SessioneCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
@@ -62,7 +63,7 @@ export default function HomeScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 32 }}
+      contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
     >
       {/* ── HERO ── */}
@@ -93,24 +94,15 @@ export default function HomeScreen() {
 
       {/* ── QUICK REGISTER BUTTON ── */}
       <Animated.View style={[{ paddingHorizontal: 16, marginTop: 20 }, s1]}>
-        <TouchableOpacity
-          onPress={() => router.push('/lavori/registra')}
-          activeOpacity={0.8}
-          style={styles.quickRegWrapper}
-        >
-          <LinearGradient
-            colors={[Colors.primary, Colors.primaryDim]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.quickRegGradient}
-          >
+        <GlassButton onPress={() => router.push('/lavori/registra')} style={styles.quickRegBtn}>
+          <View style={styles.quickRegInner}>
             <View style={styles.quickRegIcon}>
-              <MaterialCommunityIcons name="plus" size={22} color={Colors.primary} />
+              <MaterialCommunityIcons name="plus" size={22} color={Colors.primaryGlow} />
             </View>
             <Text style={styles.quickRegText}>Registra lavoro</Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="rgba(255,255,255,0.6)" />
-          </LinearGradient>
-        </TouchableOpacity>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textMuted} />
+          </View>
+        </GlassButton>
       </Animated.View>
 
       {/* ── STAT CARDS ── */}
@@ -154,11 +146,11 @@ export default function HomeScreen() {
 
       {/* ── SESSIONI RECENTI ── */}
       <Animated.View style={s4}>
-        <Text style={styles.sectionTitle2}>Sessioni recenti</Text>
+        <Text style={styles.sectionTitle2}>Turni recenti</Text>
         {ultimeSessioni.length === 0 ? (
           <EmptyState
             icon="📋"
-            title="Nessuna sessione"
+            title="Nessun turno"
             subtitle='Usa il tasto "Registra lavoro" qui sopra'
           />
         ) : (
@@ -211,36 +203,32 @@ const styles = StyleSheet.create({
   },
 
   // Quick register
-  quickRegWrapper: {
-    borderRadius: 18,
-    overflow: 'hidden',
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
+  quickRegBtn: {
+    width: '100%',
   },
-  quickRegGradient: {
+  quickRegInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 20,
     gap: 14,
   },
   quickRegIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    backgroundColor: Colors.primary + '25',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primary + '44',
   },
   quickRegText: {
     flex: 1,
-    color: '#fff',
+    color: Colors.text,
     fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
   },
 
   statsRow: {

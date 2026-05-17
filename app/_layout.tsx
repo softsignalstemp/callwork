@@ -38,7 +38,7 @@ export default function RootLayout() {
             options={{
               presentation: 'modal',
               headerShown: true,
-              title: 'Registra lavoro',
+              title: 'Registra turno',
               headerStyle: { backgroundColor: Colors.surface },
               headerTintColor: Colors.text,
               headerShadowVisible: false,
