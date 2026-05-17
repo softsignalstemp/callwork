@@ -8,7 +8,7 @@ import { StatCard } from '@/components/ui/StatCard';
 import { SessioneCard } from '@/components/jobs/SessioneCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatEuro, formatOre, monthLabel, prevMonth, nextMonth } from '@/utils/formatters';
-import { CartesianChart, Bar } from 'victory-native';
+import { BarChart } from '@/components/charts/BarChart';
 import { Colors } from '@/constants/colors';
 
 export default function HomeScreen() {
@@ -63,21 +63,7 @@ export default function HomeScreen() {
           <Text variant="titleSmall" style={{ color: theme.colors.onSurface, marginBottom: 12, fontWeight: '700' }}>
             Ultimi 7 giorni
           </Text>
-          <CartesianChart
-            data={stats.last7Days}
-            xKey="data"
-            yKeys={['guadagno']}
-            domainPadding={{ left: 20, right: 20 }}
-          >
-            {({ points, chartBounds }) => (
-              <Bar
-                points={points.guadagno}
-                chartBounds={chartBounds}
-                color={Colors.primary}
-                roundedCorners={{ topLeft: 4, topRight: 4 }}
-              />
-            )}
-          </CartesianChart>
+          <BarChart data={stats.last7Days} color={Colors.primary} />
         </View>
       )}
 
