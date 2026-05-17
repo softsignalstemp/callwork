@@ -1,6 +1,12 @@
 import { useMemo } from 'react';
 import { useLavoriStore } from '@/store/useLavoriStore';
 
+export interface DayData {
+  day: number;
+  date: string;
+  guadagno: number;
+}
+
 export function useMonthlyStats() {
   const { sessioni, datori, meseSelezionato } = useLavoriStore();
 
@@ -18,24 +24,28 @@ export function useMonthlyStats() {
     for (const s of sessioni) {
       const d = datori.find((dd) => dd.id === s.datoreId);
       if (!perDatore[s.datoreId]) {
-        perDatore[s.datoreId] = {
-          ore: 0,
-          guadagno: 0,
-          nome: d?.nome ?? '?',
-          colore: d?.colore ?? '#999',
-        };
+        perDatore[s.datoreId] = { ore: 0, guadagno: 0, nome: d?.nome ?? '?', colore: d?.colore ?? '#999' };
       }
       perDatore[s.datoreId].ore += s.oreTotali;
       perDatore[s.datoreId].guadagno += s.guadagno;
     }
 
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (6 - i));
-      const key = d.toISOString().slice(0, 10);
-      return { data: key, guadagno: perGiorno[key] ?? 0 };
+    // All days 1..today (or end of month for past months)
+    const [year, month] = meseSelezionato.split('-').map(Number);
+    const now = new Date();
+    const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
+    const lastDay = isCurrentMonth ? now.getDate() : new Date(year, month, 0).getDate();
+
+    const daysOfMonth: DayData[] = Array.from({ length: lastDay }, (_, i) => {
+      const day = i + 1;
+      const date = `${meseSelezionato}-${String(day).padStart(2, '0')}`;
+      return { day, date, guadagno: perGiorno[date] ?? 0 };
     });
 
-    return { totaleGuadagnato, oreTotali, giorniLavorati, perGiorno, perDatore, last7Days, mese: meseSelezionato };
+    return {
+      totaleGuadagnato, oreTotali, giorniLavorati,
+      perGiorno, perDatore, daysOfMonth,
+      mese: meseSelezionato,
+    };
   }, [sessioni, datori, meseSelezionato]);
 }

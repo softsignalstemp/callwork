@@ -19,7 +19,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { SessioneCard } from '@/components/jobs/SessioneCard';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
+import { LineChart } from '@/components/charts/LineChart';
 import { RingChart } from '@/components/charts/RingChart';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { formatEuro, formatOre, monthLabel, prevMonth, nextMonth } from '@/utils/formatters';
@@ -92,8 +92,22 @@ export default function HomeScreen() {
         </Animated.View>
       </LinearGradient>
 
+      {/* ── LINE CHART — mese corrente ── */}
+      <Animated.View style={s1}>
+        <GlassCard style={styles.section} glow>
+          <Text style={styles.sectionTitle}>Andamento del mese</Text>
+          <LineChart data={stats.daysOfMonth} />
+        </GlassCard>
+      </Animated.View>
+
+      {/* ── STAT CARDS ── */}
+      <Animated.View style={[styles.statsRow, s2]}>
+        <StatCard icon="⏱" value={formatOre(stats.oreTotali)} label="Ore lavorate" accent={Colors.primary} />
+        <StatCard icon="📅" value={String(stats.giorniLavorati)} label="Giorni lavorati" accent={Colors.confirmed} />
+      </Animated.View>
+
       {/* ── QUICK REGISTER BUTTON ── */}
-      <Animated.View style={[{ paddingHorizontal: 16, marginTop: 20 }, s1]}>
+      <Animated.View style={[{ paddingHorizontal: 16 }, s2]}>
         <GlassButton onPress={() => router.push('/lavori/registra')} style={styles.quickRegBtn}>
           <View style={styles.quickRegInner}>
             <View style={styles.quickRegIcon}>
@@ -104,31 +118,6 @@ export default function HomeScreen() {
           </View>
         </GlassButton>
       </Animated.View>
-
-      {/* ── STAT CARDS ── */}
-      <Animated.View style={[styles.statsRow, s1]}>
-        <StatCard icon="⏱" value={formatOre(stats.oreTotali)} label="Ore lavorate" accent={Colors.primary} />
-        <StatCard icon="📅" value={String(stats.giorniLavorati)} label="Giorni lavorati" accent={Colors.confirmed} />
-      </Animated.View>
-
-      {/* ── BAR CHART ── */}
-      {stats.last7Days.some((d) => d.guadagno > 0) ? (
-        <Animated.View style={s2}>
-          <GlassCard style={styles.section} glow>
-            <Text style={styles.sectionTitle}>Ultimi 7 giorni</Text>
-            <AnimatedBarChart data={stats.last7Days} />
-          </GlassCard>
-        </Animated.View>
-      ) : (
-        <Animated.View style={s2}>
-          <GlassCard style={styles.section}>
-            <Text style={styles.sectionTitle}>Ultimi 7 giorni</Text>
-            <View style={styles.emptyChart}>
-              <Text style={{ color: Colors.textMuted, fontSize: 13 }}>Nessuna sessione questa settimana</Text>
-            </View>
-          </GlassCard>
-        </Animated.View>
-      )}
 
       {/* ── RING CHART ── */}
       {ringSegments.length > 0 && (
@@ -235,7 +224,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 16,
-    marginTop: 12,
+    marginTop: 4,
   },
 
   section: { margin: 16, padding: 20, marginBottom: 0 },
