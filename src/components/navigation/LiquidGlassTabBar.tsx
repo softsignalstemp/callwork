@@ -94,10 +94,10 @@ function TabItem({
 
 export function LiquidGlassTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const capsuleX = useSharedValue(state.index * TAB_W + (TAB_W - CAPSULE_W) / 2);
+  const capsuleX = useSharedValue(TAB_BAR_SIDE_PADDING + state.index * TAB_W + (TAB_W - CAPSULE_W) / 2);
 
   useEffect(() => {
-    capsuleX.value = withSpring(state.index * TAB_W + (TAB_W - CAPSULE_W) / 2, {
+    capsuleX.value = withSpring(TAB_BAR_SIDE_PADDING + state.index * TAB_W + (TAB_W - CAPSULE_W) / 2, {
       damping: 22,
       stiffness: 200,
       mass: 0.8,
