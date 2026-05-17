@@ -187,8 +187,7 @@ const styles = StyleSheet.create({
   },
   rowValue: { color: Colors.text, fontSize: 16, fontWeight: '600' },
   picker: {
-    // On iOS the spinner renders inline here; on Android this is ignored
-    // (the native dialog appears over everything)
+    width: '100%',
     backgroundColor: Colors.card,
   },
 });

@@ -89,31 +89,18 @@ export default function RegistraScreen() {
 
       {/* ── SEZIONE ORARIO ─────────────────────────────── */}
       <SectionLabel text="Orario di lavoro" />
-      <View style={styles.timeRow}>
-        <View style={styles.timeCol}>
-          <Text style={styles.timeSubLabel}>Inizio</Text>
-          <TimePickerField
-            label="Inizio"
-            value={oraInizio}
-            onChange={setOraInizio}
-            accent={Colors.primary}
-          />
-        </View>
-        <View style={styles.timeSeparator}>
-          <View style={styles.timeLine} />
-          <MaterialCommunityIcons name="arrow-right" size={16} color={Colors.textMuted} />
-          <View style={styles.timeLine} />
-        </View>
-        <View style={styles.timeCol}>
-          <Text style={styles.timeSubLabel}>Fine</Text>
-          <TimePickerField
-            label="Fine"
-            value={oraFine}
-            onChange={setOraFine}
-            accent={Colors.primaryGlow}
-          />
-        </View>
-      </View>
+      <TimePickerField
+        label="Ora inizio"
+        value={oraInizio}
+        onChange={setOraInizio}
+        accent={Colors.primary}
+      />
+      <TimePickerField
+        label="Ora fine"
+        value={oraFine}
+        onChange={setOraFine}
+        accent={Colors.primaryGlow}
+      />
 
       {/* ── RIEPILOGO LIVE ─────────────────────────────── */}
       {ore > 0 && datore ? (
@@ -253,13 +240,6 @@ const styles = StyleSheet.create({
   datoreColorDot: { width: 10, height: 10, borderRadius: 5 },
   datoreNome: { fontSize: 15, fontWeight: '600' },
   datoreRate: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
-
-  // Time row
-  timeRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 0 },
-  timeCol: { flex: 1, gap: 4 },
-  timeSubLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 0.3, paddingLeft: 4 },
-  timeSeparator: { flexDirection: 'row', alignItems: 'center', paddingBottom: 14, paddingHorizontal: 8, gap: 4 },
-  timeLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: Colors.border },
 
   // Summary
   summary: {
