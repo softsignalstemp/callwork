@@ -15,26 +15,28 @@ const supabaseAnonKey =
   extra.supabaseKey ??
   '';
 
-// Log in production so the ErrorBoundary shows the exact values
-if (__DEV__) {
-  console.log('[supabase] url:', supabaseUrl ? '✓' : '✗ MISSING');
-  console.log('[supabase] key:', supabaseAnonKey ? '✓' : '✗ MISSING');
-}
-
+// Non lanciamo eccezione a livello modulo — un throw nell'import
+// avviene prima che React si avvii e non viene catturato dall'ErrorBoundary.
+// Il controllo avviene in useAuthStore.initialize()
 if (!supabaseUrl || !supabaseAnonKey) {
-  const msg =
-    `[CallWork] Supabase credentials missing.\n` +
-    `URL: ${supabaseUrl || 'EMPTY'}\n` +
-    `KEY: ${supabaseAnonKey ? '[set]' : 'EMPTY'}\n` +
-    `extra keys: ${Object.keys(extra).join(', ')}`;
-  throw new Error(msg);
+  console.error(
+    '[CallWork] Supabase credentials missing!\n',
+    'URL:', supabaseUrl || 'EMPTY',
+    'KEY:', supabaseAnonKey ? '[set]' : 'EMPTY',
+    'extra keys:', Object.keys(extra).join(', ')
+  );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+// Crea il client anche con valori vuoti — fallirà gracefully nelle chiamate auth
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  }
+);
