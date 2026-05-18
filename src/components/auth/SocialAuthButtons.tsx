@@ -3,14 +3,24 @@ import { View, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-nativ
 import { Text } from 'react-native-paper';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
+import Constants from 'expo-constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Colors } from '@/constants/colors';
+
+const isExpoGo = Constants.appOwnership === 'expo';
 
 export function SocialAuthButtons() {
   const { signInWithIdToken, loading } = useAuthStore();
 
   const handleApple = async () => {
+    if (isExpoGo) {
+      Alert.alert(
+        'Non disponibile in Expo Go',
+        'Sign in con Apple richiede il build nativo dell\'app. Usa email e password per ora.'
+      );
+      return;
+    }
     try {
       const rawNonce = Math.random().toString(36).slice(2);
       const hashedNonce = await Crypto.digestStringAsync(
