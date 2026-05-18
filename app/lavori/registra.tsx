@@ -32,19 +32,14 @@ export default function RegistraScreen() {
 
   const datore = datori.find((d) => d.id === datoreId);
 
-  const pagaOraria = useMemo(() => {
-    if (pagaOverrideStr.trim()) {
-      const p = parseFloat(pagaOverrideStr.replace(',', '.'));
-      if (!isNaN(p) && p > 0) return p;
-    }
-    return datore?.pagaOraria ?? 0;
-  }, [pagaOverrideStr, datore]);
-
-  const pagaOverrideValida = pagaOverrideStr.trim()
-    ? !isNaN(parseFloat(pagaOverrideStr.replace(',', '.'))) && parseFloat(pagaOverrideStr.replace(',', '.')) > 0
-    : true;
-
+  const pagaOverrideParsed = parseFloat(pagaOverrideStr.replace(',', '.'));
+  const pagaOverrideValida = pagaOverrideStr.trim() ? (!isNaN(pagaOverrideParsed) && pagaOverrideParsed > 0) : true;
   const isOverride = pagaOverrideStr.trim() !== '' && pagaOverrideValida;
+
+  const pagaOraria = useMemo(() => {
+    if (isOverride) return pagaOverrideParsed;
+    return datore?.pagaOraria ?? 0;
+  }, [isOverride, pagaOverrideParsed, datore]);
 
   const oreNette = useMemo(
     () => calcOreNette(oraInizio, oraFine, hasPausa ? pausaInizio : undefined, hasPausa ? pausaFine : undefined),
@@ -251,6 +246,7 @@ export default function RegistraScreen() {
         mode="outlined"
         multiline
         numberOfLines={3}
+        maxLength={500}
         placeholder="Aggiungi una nota..."
         placeholderTextColor={Colors.textMuted}
         textColor={Colors.text}

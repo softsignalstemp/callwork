@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, Pressable } from 'react-native';
 import { Text, Switch, Button, Dialog, Portal } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,7 +11,7 @@ import { useLavoriStore } from '@/store/useLavoriStore';
 import { Colors } from '@/constants/colors';
 
 interface SettingRowProps {
-  icon: string;
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   label: string;
   description?: string;
   onPress?: () => void;
@@ -21,25 +21,19 @@ interface SettingRowProps {
 
 function SettingRow({ icon, label, description, onPress, right, danger }: SettingRowProps) {
   return (
-    <View
-      style={[styles.row, { opacity: danger ? 0.85 : 1 }]}
-      onTouchEnd={onPress}
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.row, { opacity: pressed ? 0.7 : danger ? 0.85 : 1 }]}
     >
       <View style={[styles.iconBox, { backgroundColor: (danger ? Colors.error : Colors.primary) + '22' }]}>
-        <MaterialCommunityIcons
-          name={icon as any}
-          size={20}
-          color={danger ? Colors.error : Colors.primary}
-        />
+        <MaterialCommunityIcons name={icon} size={20} color={danger ? Colors.error : Colors.primary} />
       </View>
       <View style={styles.rowText}>
         <Text style={[styles.rowLabel, { color: danger ? Colors.error : Colors.text }]}>{label}</Text>
         {description && <Text style={styles.rowDesc}>{description}</Text>}
       </View>
-      {right ?? (
-        onPress && <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textMuted} />
-      )}
-    </View>
+      {right ?? (onPress && <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textMuted} />)}
+    </Pressable>
   );
 }
 
@@ -79,7 +73,11 @@ export default function ImpostazioniScreen() {
         text: 'Elimina',
         style: 'destructive',
         onPress: () => {
-          getDb().execSync('DELETE FROM sessioni; DELETE FROM lavori; DELETE FROM datori; DELETE FROM disponibilita;');
+          const db = getDb();
+          db.execSync('DELETE FROM sessioni');
+          db.execSync('DELETE FROM lavori');
+          db.execSync('DELETE FROM datori');
+          db.execSync('DELETE FROM disponibilita');
           caricaDati();
         },
       },

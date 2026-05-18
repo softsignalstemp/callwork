@@ -9,8 +9,17 @@ export function getDb(): SQLite.SQLiteDatabase {
   return db;
 }
 
-// Each statement is separate — execSync with multi-statement blocks
-// can silently fail in expo-sqlite 16
+function safeAlter(database: SQLite.SQLiteDatabase, sql: string) {
+  try {
+    database.execSync(sql);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (!msg.toLowerCase().includes('duplicate column name') && !msg.toLowerCase().includes('already exists')) {
+      console.error('[db] migration error:', msg, '|', sql);
+    }
+  }
+}
+
 export function initDb(): void {
   const database = getDb();
 
@@ -37,7 +46,6 @@ export function initDb(): void {
     )`
   );
 
-  // No REFERENCES constraint — avoids FK errors on fresh DBs
   database.execSync(
     `CREATE TABLE IF NOT EXISTS sessioni (
       id           TEXT PRIMARY KEY,
@@ -56,9 +64,9 @@ export function initDb(): void {
     )`
   );
 
-  // Migration: add break columns to existing DBs
-  try { database.execSync(`ALTER TABLE sessioni ADD COLUMN pausa_inizio TEXT`); } catch {}
-  try { database.execSync(`ALTER TABLE sessioni ADD COLUMN pausa_fine TEXT`); } catch {}
+  // Migrations for existing DBs — only suppresses duplicate-column errors
+  safeAlter(database, `ALTER TABLE sessioni ADD COLUMN pausa_inizio TEXT`);
+  safeAlter(database, `ALTER TABLE sessioni ADD COLUMN pausa_fine TEXT`);
 
   database.execSync(
     `CREATE TABLE IF NOT EXISTS disponibilita (

@@ -66,6 +66,7 @@ export default function NuovoDatoreScreen() {
         value={nome}
         onChangeText={setNome}
         mode="outlined"
+        maxLength={100}
         placeholder="es. Mario Rossi Srl"
         placeholderTextColor={Colors.textMuted}
         textColor={Colors.text}
@@ -130,6 +131,7 @@ export default function NuovoDatoreScreen() {
         value={descrizione}
         onChangeText={setDescrizione}
         mode="outlined"
+        maxLength={500}
         placeholder="Tipo di lavoro, sede, ecc."
         placeholderTextColor={Colors.textMuted}
         textColor={Colors.text}

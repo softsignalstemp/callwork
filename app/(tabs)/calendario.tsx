@@ -105,15 +105,6 @@ export default function CalendarioScreen() {
             arrowColor: Colors.primary,
             dotColor: Colors.primary,
             textDisabledColor: Colors.textMuted + '88',
-            'stylesheet.calendar.header': {
-              header: {
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingHorizontal: 8,
-                marginBottom: 8,
-              },
-            },
           }}
         />
       </GlassCard>

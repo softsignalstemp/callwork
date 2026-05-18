@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface SettingsState {
   darkMode: boolean;
   hydrated: boolean;
-  toggleDarkMode: () => void;
+  toggleDarkMode: () => Promise<void>;
   hydrate: () => Promise<void>;
 }
 
@@ -17,17 +17,24 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   toggleDarkMode: async () => {
     const next = !get().darkMode;
     set({ darkMode: next });
-    await AsyncStorage.setItem(DARK_MODE_KEY, JSON.stringify(next));
+    try {
+      await AsyncStorage.setItem(DARK_MODE_KEY, JSON.stringify(next));
+    } catch (e) {
+      console.error('[settings] failed to persist darkMode:', e);
+    }
   },
 
   hydrate: async () => {
     try {
       const stored = await AsyncStorage.getItem(DARK_MODE_KEY);
       if (stored !== null) {
-        set({ darkMode: JSON.parse(stored) });
+        const parsed = JSON.parse(stored);
+        if (typeof parsed === 'boolean') {
+          set({ darkMode: parsed });
+        }
       }
     } catch {
-      // ignore
+      // ignore read errors, use default
     } finally {
       set({ hydrated: true });
     }

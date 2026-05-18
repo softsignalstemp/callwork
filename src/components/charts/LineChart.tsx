@@ -98,11 +98,12 @@ export function LineChart({ data, height = 200 }: LineChartProps) {
   const aPath = areaPath(pts, bottom);
   const pLen = pathLength(pts);
 
+  const dataKey = data.map(d => `${d.date}:${d.guadagno}`).join(',');
   useEffect(() => {
     if (!width || !pts.length) return;
     progress.value = 0;
     progress.value = withTiming(1, { duration: 1600, easing: Easing.out(Easing.cubic) });
-  }, [width, data.length]);
+  }, [width, dataKey]);
 
   const animProps = useAnimatedProps(() => ({
     strokeDashoffset: pLen * (1 - progress.value),
