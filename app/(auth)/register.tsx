@@ -208,7 +208,7 @@ export default function RegisterScreen() {
               Ho letto e accetto l'
               <Text
                 style={styles.privacyLink}
-                onPress={() => Linking.openURL('https://privacy.callwork.softsignals.it')}
+                onPress={() => Linking.openURL('https://privacy-callwork.softsignals.it')}
               >
                 informativa sulla privacy
               </Text>
