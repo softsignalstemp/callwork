@@ -2,9 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
 
-// Legge da process.env (iniettato da .env.local / EAS env vars al build time)
-// oppure da app.config.js extra come fallback
-const extra = Constants.expoConfig?.extra ?? {};
+const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, string>;
 
 const supabaseUrl =
   process.env.EXPO_PUBLIC_SUPABASE_URL ??
@@ -17,10 +15,19 @@ const supabaseAnonKey =
   extra.supabaseKey ??
   '';
 
+// Log in production so the ErrorBoundary shows the exact values
+if (__DEV__) {
+  console.log('[supabase] url:', supabaseUrl ? '✓' : '✗ MISSING');
+  console.log('[supabase] key:', supabaseAnonKey ? '✓' : '✗ MISSING');
+}
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    '[CallWork] Supabase credentials missing. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_KEY in .env.local or EAS environment variables.'
-  );
+  const msg =
+    `[CallWork] Supabase credentials missing.\n` +
+    `URL: ${supabaseUrl || 'EMPTY'}\n` +
+    `KEY: ${supabaseAnonKey ? '[set]' : 'EMPTY'}\n` +
+    `extra keys: ${Object.keys(extra).join(', ')}`;
+  throw new Error(msg);
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

@@ -1,5 +1,6 @@
 import 'react-native-reanimated';
 import React, { useEffect } from 'react';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -55,6 +56,7 @@ export default function RootLayout() {
   }
 
   return (
+    <ErrorBoundary>
     <GestureHandlerRootView style={styles.root}>
       <PaperProvider theme={theme}>
         <Stack
@@ -90,6 +92,7 @@ export default function RootLayout() {
         </Stack>
       </PaperProvider>
     </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 
