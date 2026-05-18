@@ -46,13 +46,15 @@ export const useLavoriStore = create<LavoriState>((set, get) => ({
   },
 
   aggiungiDatore: (d) => {
-    const newDatore: Omit<Datore, 'creatoIl' | 'aggiornato'> = { ...d, id: generateId() };
+    const colore = /^#[0-9A-Fa-f]{6}$/.test(d.colore) ? d.colore : '#8B5CF6';
+    const newDatore: Omit<Datore, 'creatoIl' | 'aggiornato'> = { ...d, colore, id: generateId() };
     insertDatore(newDatore);
     set({ datori: getAllDatori() });
   },
 
   modificaDatore: (d) => {
-    updateDatore(d);
+    const colore = /^#[0-9A-Fa-f]{6}$/.test(d.colore) ? d.colore : '#8B5CF6';
+    updateDatore({ ...d, colore });
     set({ datori: getAllDatori() });
   },
 
