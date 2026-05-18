@@ -36,6 +36,13 @@
       "@react-native-community/datetimepicker",
       "expo-web-browser",
       "expo-apple-authentication"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1928f292-9cae-4aa2-9f49-c941ff37b7e6"
+      }
+    },
+    "owner": "softsignalss-organization"
   }
 }
