@@ -65,9 +65,9 @@ export default function HomeScreen() {
     >
       {/* ── HERO ── */}
       <LinearGradient
-        colors={[Colors.primaryMuted + 'CC', Colors.bg]}
+        colors={[Colors.primaryMuted + 'DD', Colors.primaryMuted + '55', 'transparent']}
         style={[styles.hero, { paddingTop: insets.top + 12 }]}
-        start={{ x: 0.3, y: 0 }}
+        start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
       >
         <View style={styles.monthRow}>
@@ -162,7 +162,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
 
-  hero: { paddingHorizontal: 8, paddingBottom: 20 },
+  hero: { paddingHorizontal: 8, paddingBottom: 48 },
   monthRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   monthLabel: {
     color: Colors.textSecondary,

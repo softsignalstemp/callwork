@@ -19,7 +19,7 @@ export default function LavoriScreen() {
   const router = useRouter();
   const { datori, sessioni, rimuoviDatore, rimuoviSessione } = useLavoriStore();
   const stats = useMonthlyStats();
-  const [activeTab, setActiveTab] = useState<TabValue>('datori');
+  const [activeTab, setActiveTab] = useState<TabValue>('turni');
   const [fabOpen, setFabOpen] = useState(false);
 
   const confirmDeleteDatore = (id: string, nome: string) => {
@@ -50,8 +50,8 @@ export default function LavoriScreen() {
         <Text style={styles.title}>Lavori</Text>
         <LiquidGlassSegmented
           options={[
-            { value: 'datori', label: 'Datori', icon: 'domain' },
             { value: 'turni', label: 'Turni', icon: 'clock-outline' },
+            { value: 'datori', label: 'Datori', icon: 'domain' },
           ]}
           value={activeTab}
           onChange={setActiveTab}
