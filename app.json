@@ -43,10 +43,10 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "1928f292-9cae-4aa2-9f49-c941ff37b7e6"
+        "projectId": "25b01a40-8b94-4318-9c89-36ca51b6bbd5"
       }
     },
-    "owner": "softsignalss-organization",
+    "owner": "softsignals",
     "runtimeVersion": {
       "policy": "appVersion"
     },
