@@ -8,8 +8,10 @@ import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SvgXml } from 'react-native-svg';
 import { useAuthStore } from '@/store/useAuthStore';
 import { DecorShape } from '@/components/ui/DecorShape';
+import { LOGO_SVG } from '@/constants/logo';
 import { Colors } from '@/constants/colors';
 
 const BG = require('../../assets/bg-violet.avif');
@@ -70,10 +72,7 @@ export default function LoginScreen() {
       >
         {/* Brand */}
         <View style={styles.brand}>
-          <View style={styles.logoWrap}>
-            <MaterialCommunityIcons name="briefcase-clock" size={40} color={Colors.primary} />
-          </View>
-          <Text style={styles.appName}>CallWork</Text>
+          <SvgXml xml={LOGO_SVG} width={260} height={100} />
           <Text style={styles.tagline}>Tieni traccia dei tuoi turni</Text>
         </View>
 
@@ -162,23 +161,7 @@ const styles = StyleSheet.create({
   quadMid: { position: 'absolute', top: '38%', right: 28 },
   blobBR: { position: 'absolute', bottom: 120, right: -28 },
 
-  brand: { alignItems: 'center', gap: 10 },
-  logoWrap: {
-    width: 84,
-    height: 84,
-    borderRadius: 26,
-    backgroundColor: Colors.primaryMuted + 'CC',
-    borderWidth: 1,
-    borderColor: Colors.primary + '66',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.55,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 12,
-  },
-  appName: { color: Colors.text, fontSize: 30, fontWeight: '900', letterSpacing: -0.5 },
+  brand: { alignItems: 'center', gap: 8 },
   tagline: { color: Colors.textSecondary, fontSize: 14 },
 
   card: {

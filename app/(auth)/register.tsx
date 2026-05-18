@@ -7,8 +7,10 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SvgXml } from 'react-native-svg';
 import { useAuthStore } from '@/store/useAuthStore';
 import { DecorShape } from '@/components/ui/DecorShape';
+import { LOGO_SVG } from '@/constants/logo';
 import { Colors } from '@/constants/colors';
 
 const BG = require('../../assets/bg-violet.avif');
@@ -114,10 +116,7 @@ export default function RegisterScreen() {
       >
 
         <View style={styles.brand}>
-          <View style={styles.logoWrap}>
-            <MaterialCommunityIcons name="briefcase-clock" size={40} color={Colors.primary} />
-          </View>
-          <Text style={styles.appName}>CallWork</Text>
+          <SvgXml xml={LOGO_SVG} width={220} height={85} />
         </View>
 
         <View style={styles.card}>
@@ -257,23 +256,7 @@ const styles = StyleSheet.create({
   shardBR: { position: 'absolute', bottom: 180, right: -16 },
   flowerMid: { position: 'absolute', top: '42%', left: 20 },
 
-  brand: { alignItems: 'center', gap: 8 },
-  logoWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: Colors.primaryMuted,
-    borderWidth: 1,
-    borderColor: Colors.primary + '55',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 10,
-  },
-  appName: { color: Colors.text, fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  brand: { alignItems: 'center' },
 
   card: {
     backgroundColor: Colors.card,
