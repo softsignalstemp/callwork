@@ -20,7 +20,9 @@ export default function CalendarioScreen() {
     const marks: Record<string, MarkedDate> = {};
     const addDot = (data: string, key: string, color: string) => {
       if (!marks[data]) marks[data] = { dots: [] };
-      marks[data].dots!.push({ key, color });
+      if (!marks[data].dots!.some((d) => d.key === key)) {
+        marks[data].dots!.push({ key, color });
+      }
     };
     for (const s of sessioni) {
       addDot(s.data, 'worked', Colors.worked);
