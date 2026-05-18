@@ -162,7 +162,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
 
-  hero: { paddingHorizontal: 8, paddingBottom: 48 },
+  hero: { paddingHorizontal: 8, paddingBottom: 16 },
   monthRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   monthLabel: {
     color: Colors.textSecondary,
