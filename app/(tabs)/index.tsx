@@ -179,10 +179,7 @@ const styles = StyleSheet.create({
     fontSize: 46,
     fontWeight: '900',
     letterSpacing: -1.5,
-    textShadowColor: Colors.primary,
-    textShadowRadius: 24,
-    textShadowOffset: { width: 0, height: 0 },
-  } as any,
+  },
   heroDivider: {
     width: 56,
     height: 2,
