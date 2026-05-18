@@ -6,10 +6,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLavoriStore } from '@/store/useLavoriStore';
 import { TimePickerField, DatePickerField } from '@/components/ui/PickerField';
-import { calcOre, calcGuadagno, formatEuro, formatOre, today } from '@/utils/formatters';
+import { calcOreNette, calcGuadagno, formatEuro, formatOre, today } from '@/utils/formatters';
 import { Colors } from '@/constants/colors';
-
-const PAUSE_PRESET = [0, 15, 30, 45, 60] as const;
 
 export default function RegistraScreen() {
   const router = useRouter();
@@ -19,7 +17,9 @@ export default function RegistraScreen() {
   const [data, setData] = useState(today());
   const [oraInizio, setOraInizio] = useState('08:00');
   const [oraFine, setOraFine] = useState('17:00');
-  const [pausaMin, setPausaMin] = useState(0);
+  const [hasPausa, setHasPausa] = useState(false);
+  const [pausaInizio, setPausaInizio] = useState('12:30');
+  const [pausaFine, setPausaFine] = useState('13:30');
   const [note, setNote] = useState('');
 
   const [pagaOverrideStr, setPagaOverrideStr] = useState('');
@@ -46,8 +46,10 @@ export default function RegistraScreen() {
 
   const isOverride = pagaOverrideStr.trim() !== '' && pagaOverrideValida;
 
-  const oreLorde = useMemo(() => calcOre(oraInizio, oraFine), [oraInizio, oraFine]);
-  const oreNette = useMemo(() => Math.max(0, oreLorde - pausaMin / 60), [oreLorde, pausaMin]);
+  const oreNette = useMemo(
+    () => calcOreNette(oraInizio, oraFine, hasPausa ? pausaInizio : undefined, hasPausa ? pausaFine : undefined),
+    [oraInizio, oraFine, hasPausa, pausaInizio, pausaFine]
+  );
   const guadagno = useMemo(() => calcGuadagno(oreNette, pagaOraria), [oreNette, pagaOraria]);
 
   const handleDatoreChange = (id: string) => {
@@ -58,11 +60,12 @@ export default function RegistraScreen() {
 
   const salva = () => {
     if (!datoreId) { Alert.alert('Nessun datore', 'Seleziona un datore di lavoro.'); return; }
-    if (!isFinite(oreLorde) || oreLorde <= 0) { Alert.alert('Orario non valido', "L'ora di fine deve essere successiva all'inizio."); return; }
-    if (oreNette <= 0) { Alert.alert('Pausa troppo lunga', 'La pausa supera il turno lavorativo.'); return; }
+    if (!isFinite(oreNette) || oreNette <= 0) { Alert.alert('Orario non valido', "Controlla orario di inizio, fine e pausa."); return; }
     if (!pagaOverrideValida) { Alert.alert('Paga non valida', 'Inserisci una paga oraria valida.'); return; }
     aggiungiSessione({
       datoreId, data, oraInizio, oraFine,
+      pausaInizio: hasPausa ? pausaInizio : undefined,
+      pausaFine: hasPausa ? pausaFine : undefined,
       oreTotali: oreNette,
       guadagno,
       note: note.trim() || undefined,
@@ -183,27 +186,30 @@ export default function RegistraScreen() {
       <TimePickerField label="Ora fine" value={oraFine} onChange={setOraFine} accent={Colors.primaryGlow} />
 
       {/* ── PAUSA ──────────────────────────────────────── */}
-      <SectionLabel text="Pausa" />
-      <View style={styles.pausaRow}>
-        {PAUSE_PRESET.map((min) => {
-          const active = pausaMin === min;
-          return (
-            <TouchableOpacity
-              key={min}
-              onPress={() => setPausaMin(min)}
-              activeOpacity={0.75}
-              style={[styles.pausaChip, active && { backgroundColor: Colors.primary + '22', borderColor: Colors.primary }]}
-            >
-              <Text style={[styles.pausaLabel, { color: active ? Colors.primary : Colors.textSecondary }]}>
-                {min === 0 ? 'Nessuna' : `${min} min`}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <TouchableOpacity
+        onPress={() => setHasPausa(v => !v)}
+        activeOpacity={0.75}
+        style={[styles.pausaToggle, hasPausa && { borderColor: Colors.available, backgroundColor: Colors.available + '12' }]}
+      >
+        <MaterialCommunityIcons
+          name={hasPausa ? 'checkbox-marked-circle' : 'checkbox-blank-circle-outline'}
+          size={20}
+          color={hasPausa ? Colors.available : Colors.textMuted}
+        />
+        <Text style={[styles.pausaToggleLabel, { color: hasPausa ? Colors.available : Colors.textSecondary }]}>
+          Includi pausa
+        </Text>
+      </TouchableOpacity>
+
+      {hasPausa && (
+        <>
+          <TimePickerField label="Inizio pausa" value={pausaInizio} onChange={setPausaInizio} accent={Colors.available} />
+          <TimePickerField label="Fine pausa" value={pausaFine} onChange={setPausaFine} accent={Colors.available} />
+        </>
+      )}
 
       {/* ── RIEPILOGO LIVE ─────────────────────────────── */}
-      {oreLorde > 0 && datore && (
+      {oreNette > 0 && datore && (
         <View style={styles.summary}>
           <LinearGradient
             colors={['transparent', Colors.primary + '18', 'transparent']}
@@ -217,20 +223,20 @@ export default function RegistraScreen() {
           </View>
           <Text style={styles.summaryDetail}>
             {formatEuro(pagaOraria)}/h × {oreNette.toFixed(2)}h
-            {pausaMin > 0 && <Text style={{ color: Colors.textMuted }}> (pausa {pausaMin} min)</Text>}
+            {hasPausa && <Text style={{ color: Colors.textMuted }}> (pausa {pausaInizio}–{pausaFine})</Text>}
             {isOverride && <Text style={{ color: Colors.available }}> · paga modificata</Text>}
           </Text>
         </View>
       )}
 
-      {oreLorde > 0 && oreLorde <= pausaMin / 60 && (
+      {hasPausa && oreNette <= 0 && (
         <View style={styles.warningBox}>
           <MaterialCommunityIcons name="alert-circle-outline" size={16} color={Colors.error} />
           <Text style={styles.warningText}>La pausa supera la durata del turno</Text>
         </View>
       )}
 
-      {oreLorde <= 0 && oraFine <= oraInizio && (
+      {!hasPausa && oreNette <= 0 && oraFine <= oraInizio && (
         <View style={styles.warningBox}>
           <MaterialCommunityIcons name="alert-circle-outline" size={16} color={Colors.error} />
           <Text style={styles.warningText}>L'ora di fine è precedente all'inizio</Text>
@@ -300,9 +306,8 @@ const styles = StyleSheet.create({
   pagaResetBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   pagaResetText: { color: Colors.textMuted, fontSize: 12 },
 
-  pausaRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  pausaChip: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.card },
-  pausaLabel: { fontSize: 13, fontWeight: '600' },
+  pausaToggle: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: Colors.card, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, padding: 14 },
+  pausaToggleLabel: { fontSize: 14, fontWeight: '600' },
 
   summary: { borderRadius: 16, padding: 20, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: Colors.primary + '33', backgroundColor: Colors.card, overflow: 'hidden' },
   summaryRow: { flexDirection: 'row', alignItems: 'baseline', gap: 12 },

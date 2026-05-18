@@ -25,10 +25,10 @@ export default function CalendarioScreen() {
       }
     };
     for (const s of sessioni) {
-      addDot(s.data, 'worked', Colors.worked);
-      if (s.confermato) addDot(s.data, 'confirmed', Colors.confirmed);
+      addDot(s.data, `${s.data}-worked`, Colors.worked);
+      if (s.confermato) addDot(s.data, `${s.data}-confirmed`, Colors.confirmed);
     }
-    for (const d of disponibilita) addDot(d.data, 'available', Colors.available);
+    for (const d of disponibilita) addDot(d.data, `${d.data}-available`, Colors.available);
     if (selectedDay) {
       marks[selectedDay] = { ...marks[selectedDay], selected: true, selectedColor: Colors.primary + '55' };
     }

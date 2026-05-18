@@ -24,6 +24,8 @@ export interface Sessione {
   data: string;
   oraInizio: string;
   oraFine: string;
+  pausaInizio?: string;  // HH:MM — start of break
+  pausaFine?: string;    // HH:MM — end of break
   oreTotali: number;
   guadagno: number;
   note?: string;

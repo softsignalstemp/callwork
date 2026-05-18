@@ -9,6 +9,8 @@ function rowToSessione(row: Record<string, unknown>): Sessione {
     data: row.data as string,
     oraInizio: row.ora_inizio as string,
     oraFine: row.ora_fine as string,
+    pausaInizio: row.pausa_inizio as string | undefined,
+    pausaFine: row.pausa_fine as string | undefined,
     oreTotali: row.ore_totali as number,
     guadagno: row.guadagno as number,
     note: row.note as string | undefined,
@@ -19,7 +21,7 @@ function rowToSessione(row: Record<string, unknown>): Sessione {
 
 export function getSessioniByMese(mese: string): Sessione[] {
   const rows = getDb().getAllSync(
-    "SELECT * FROM sessioni WHERE data LIKE ? ORDER BY data DESC, ora_inizio DESC",
+    'SELECT * FROM sessioni WHERE data LIKE ? ORDER BY data DESC, ora_inizio DESC',
     [`${mese}%`]
   ) as Record<string, unknown>[];
   return rows.map(rowToSessione);
@@ -38,19 +40,12 @@ export function insertSessione(s: Omit<Sessione, 'creatoIl'>) {
   const guadagno = isFinite(s.guadagno) ? s.guadagno : 0;
   getDb().runSync(
     `INSERT INTO sessioni
-      (id, datore_id, lavoro_id, data, ora_inizio, ora_fine, ore_totali, guadagno, note, confermato, creato_il)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, datore_id, lavoro_id, data, ora_inizio, ora_fine, pausa_inizio, pausa_fine,
+       ore_totali, guadagno, note, confermato, creato_il)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [s.id, s.datoreId, s.lavoroId ?? null, s.data, s.oraInizio, s.oraFine,
+     s.pausaInizio ?? null, s.pausaFine ?? null,
      oreTotali, guadagno, s.note ?? null, s.confermato ? 1 : 0, now]
-  );
-}
-
-export function updateSessione(s: Sessione) {
-  getDb().runSync(
-    `UPDATE sessioni SET datore_id=?, lavoro_id=?, data=?, ora_inizio=?, ora_fine=?,
-     ore_totali=?, guadagno=?, note=?, confermato=? WHERE id=?`,
-    [s.datoreId, s.lavoroId ?? null, s.data, s.oraInizio, s.oraFine,
-     s.oreTotali, s.guadagno, s.note ?? null, s.confermato ? 1 : 0, s.id]
   );
 }
 

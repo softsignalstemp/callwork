@@ -40,19 +40,25 @@ export function initDb(): void {
   // No REFERENCES constraint — avoids FK errors on fresh DBs
   database.execSync(
     `CREATE TABLE IF NOT EXISTS sessioni (
-      id          TEXT PRIMARY KEY,
-      datore_id   TEXT NOT NULL,
-      lavoro_id   TEXT,
-      data        TEXT NOT NULL,
-      ora_inizio  TEXT NOT NULL,
-      ora_fine    TEXT NOT NULL,
-      ore_totali  REAL NOT NULL,
-      guadagno    REAL NOT NULL,
-      note        TEXT,
-      confermato  INTEGER NOT NULL DEFAULT 0,
-      creato_il   TEXT NOT NULL
+      id           TEXT PRIMARY KEY,
+      datore_id    TEXT NOT NULL,
+      lavoro_id    TEXT,
+      data         TEXT NOT NULL,
+      ora_inizio   TEXT NOT NULL,
+      ora_fine     TEXT NOT NULL,
+      pausa_inizio TEXT,
+      pausa_fine   TEXT,
+      ore_totali   REAL NOT NULL,
+      guadagno     REAL NOT NULL,
+      note         TEXT,
+      confermato   INTEGER NOT NULL DEFAULT 0,
+      creato_il    TEXT NOT NULL
     )`
   );
+
+  // Migration: add break columns to existing DBs
+  try { database.execSync(`ALTER TABLE sessioni ADD COLUMN pausa_inizio TEXT`); } catch {}
+  try { database.execSync(`ALTER TABLE sessioni ADD COLUMN pausa_fine TEXT`); } catch {}
 
   database.execSync(
     `CREATE TABLE IF NOT EXISTS disponibilita (

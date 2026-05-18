@@ -22,6 +22,18 @@ export function calcGuadagno(ore: number, pagaOraria: number): number {
   return Math.round(ore * pagaOraria * 100) / 100;
 }
 
+export function calcOreNette(
+  oraInizio: string,
+  oraFine: string,
+  pausaInizio?: string,
+  pausaFine?: string
+): number {
+  const lorde = calcOre(oraInizio, oraFine);
+  if (!pausaInizio || !pausaFine) return lorde;
+  const pausa = calcOre(pausaInizio, pausaFine);
+  return Math.max(0, lorde - pausa);
+}
+
 export function today(): string {
   return new Date().toISOString().slice(0, 10);
 }

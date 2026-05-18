@@ -24,25 +24,36 @@ function timeToH(hhmm: string): number {
 
 // ─── Mini time-of-day bar ─────────────────────────────────────────────────────
 
-function TimeBar({ oraInizio, oraFine, color }: { oraInizio: string; oraFine: string; color: string }) {
+function TimeBar({
+  oraInizio, oraFine, pausaInizio, pausaFine, color,
+}: {
+  oraInizio: string; oraFine: string;
+  pausaInizio?: string; pausaFine?: string;
+  color: string;
+}) {
   const start = timeToH(oraInizio);
   const end = timeToH(oraFine);
-  const startPct = Math.max(0, (start / 24) * 100);
-  const widthPct = Math.max(0, Math.min(((end - start) / 24) * 100, 100 - startPct));
 
+  if (pausaInizio && pausaFine) {
+    const pStart = timeToH(pausaInizio);
+    const pEnd = timeToH(pausaFine);
+    const seg1Start = (start / 24) * 100;
+    const seg1Width = ((pStart - start) / 24) * 100;
+    const seg2Start = (pEnd / 24) * 100;
+    const seg2Width = ((end - pEnd) / 24) * 100;
+    return (
+      <View style={barStyles.track}>
+        <View style={[barStyles.fill, { left: `${seg1Start}%` as any, width: `${Math.max(0, seg1Width)}%` as any, backgroundColor: color }]} />
+        <View style={[barStyles.fill, { left: `${seg2Start}%` as any, width: `${Math.max(0, seg2Width)}%` as any, backgroundColor: color }]} />
+      </View>
+    );
+  }
+
+  const startPct = (start / 24) * 100;
+  const widthPct = Math.max(0, Math.min(((end - start) / 24) * 100, 100 - startPct));
   return (
     <View style={barStyles.track}>
-      {/* Worked window */}
-      <View
-        style={[
-          barStyles.fill,
-          {
-            left: `${startPct}%` as any,
-            width: `${widthPct}%` as any,
-            backgroundColor: color,
-          },
-        ]}
-      />
+      <View style={[barStyles.fill, { left: `${startPct}%` as any, width: `${widthPct}%` as any, backgroundColor: color }]} />
     </View>
   );
 }
@@ -105,21 +116,26 @@ export function SessioneCard({ sessione, nomeAdatore, coloreDatore, onDelete }: 
 
         {/* ── Row 2: time range ── */}
         <View style={styles.timeRow}>
-          <View style={styles.timePill}>
-            <MaterialCommunityIcons name="clock-start" size={12} color={Colors.textMuted} />
-            <Text style={styles.timeText}>{sessione.oraInizio}</Text>
-          </View>
-          <View style={styles.timeBarWrap}>
-            <TimeBar
-              oraInizio={sessione.oraInizio}
-              oraFine={sessione.oraFine}
-              color={accentColor}
-            />
-          </View>
-          <View style={styles.timePill}>
-            <Text style={styles.timeText}>{sessione.oraFine}</Text>
-            <MaterialCommunityIcons name="clock-end" size={12} color={Colors.textMuted} />
-          </View>
+          <Text style={styles.timeText}>{sessione.oraInizio}</Text>
+          {sessione.pausaInizio && sessione.pausaFine ? (
+            <>
+              <View style={styles.timeBarWrap}>
+                <TimeBar oraInizio={sessione.oraInizio} oraFine={sessione.oraFine}
+                  pausaInizio={sessione.pausaInizio} pausaFine={sessione.pausaFine} color={accentColor} />
+              </View>
+              <Text style={styles.timePausa}>{sessione.pausaInizio}</Text>
+              <Text style={styles.timePausaSep}>—</Text>
+              <Text style={styles.timePausa}>{sessione.pausaFine}</Text>
+              <View style={styles.timeBarWrap}>
+                {/* spacer — bar already covers full width */}
+              </View>
+            </>
+          ) : (
+            <View style={styles.timeBarWrap}>
+              <TimeBar oraInizio={sessione.oraInizio} oraFine={sessione.oraFine} color={accentColor} />
+            </View>
+          )}
+          <Text style={styles.timeText}>{sessione.oraFine}</Text>
         </View>
 
         {/* ── Row 3: date + hours pill + earnings ── */}
@@ -197,9 +213,10 @@ const styles = StyleSheet.create({
   },
   statusText: { fontSize: 10, fontWeight: '700' },
 
-  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  timePill: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   timeText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },
+  timePausa: { color: Colors.textMuted, fontSize: 11, fontWeight: '500' },
+  timePausaSep: { color: Colors.border, fontSize: 11 },
   timeBarWrap: { flex: 1 },
 
   data: { color: Colors.textMuted, fontSize: 12 },
