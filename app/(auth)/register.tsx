@@ -226,10 +226,10 @@ export default function RegisterScreen() {
             mode="contained"
             onPress={handleRegister}
             loading={loading}
-            disabled={loading || !privacyAccepted}
+            disabled={loading}
             buttonColor={Colors.primary}
             textColor="#fff"
-            style={[styles.btn, { opacity: privacyAccepted ? 1 : 0.35 }]}
+            style={[styles.btn, { opacity: privacyAccepted ? 1 : 0.45 }]}
             contentStyle={{ paddingVertical: 6 }}
             labelStyle={{ fontSize: 16, fontWeight: '700' }}
           >
