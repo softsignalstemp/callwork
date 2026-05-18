@@ -8,6 +8,7 @@ import { Calendar } from 'react-native-calendars';
 import { useLavoriStore } from '@/store/useLavoriStore';
 import { SessioneCard } from '@/components/jobs/SessioneCard';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { DecorShape } from '@/components/ui/DecorShape';
 import { Colors } from '@/constants/colors';
 
 type MarkedDate = { dots?: { key: string; color: string }[]; selected?: boolean; selectedColor?: string };
@@ -66,6 +67,8 @@ export default function CalendarioScreen() {
     >
       {/* ── HEADER ── */}
       <View style={styles.header}>
+        <DecorShape shape="clover" size={88} color="#fb7185" opacity={0.1} rotate={-8}
+          style={{ position: 'absolute', right: -16, top: 0 }} />
         <Text style={styles.title}>Calendario</Text>
         <View style={styles.legenda}>
           {LEGENDA.map(({ color, label }) => (

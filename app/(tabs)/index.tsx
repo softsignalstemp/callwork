@@ -22,6 +22,7 @@ import { LineChart } from '@/components/charts/LineChart';
 import { RingChart } from '@/components/charts/RingChart';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { formatEuro, formatOre, monthLabel, prevMonth, nextMonth } from '@/utils/formatters';
+import { DecorShape } from '@/components/ui/DecorShape';
 import { Colors } from '@/constants/colors';
 
 function useFadeIn(delayMs = 0) {
@@ -64,6 +65,11 @@ export default function HomeScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
     >
       {/* ── HERO ── */}
+      {/* Hero decorative shapes (absolute, behind content) */}
+      <DecorShape shape="shard" size={140} color={Colors.primary} opacity={0.12} rotate={-30}
+        style={{ position: 'absolute', top: insets.top + 10, right: -24, zIndex: 0 }} />
+      <DecorShape shape="quad" size={48} color={Colors.primaryGlow} opacity={0.18} rotate={22}
+        style={{ position: 'absolute', top: insets.top + 80, left: 24, zIndex: 0 }} />
       <LinearGradient
         colors={[Colors.primaryMuted + 'DD', Colors.primaryMuted + '55', 'transparent']}
         style={[styles.hero, { paddingTop: insets.top + 12 }]}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity,
+  View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ImageBackground,
 } from 'react-native';
 import { Text, TextInput, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
@@ -8,7 +8,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/useAuthStore';
+import { DecorShape } from '@/components/ui/DecorShape';
 import { Colors } from '@/constants/colors';
+
+const BG = require('../../assets/bg-violet.avif');
 
 const PASSWORD_MIN = 8;
 
@@ -89,18 +92,24 @@ export default function RegisterScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <ImageBackground source={BG} style={StyleSheet.absoluteFill} resizeMode="cover">
+        <LinearGradient
+          colors={['rgba(7,7,15,0.45)', 'rgba(7,7,15,0.85)', Colors.bg]}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+        />
+      </ImageBackground>
+
+      <DecorShape shape="clover" size={120} color="#fb7185" opacity={0.15} rotate={15} style={styles.cloverTL} />
+      <DecorShape shape="shard" size={80} color={Colors.primary} opacity={0.18} rotate={60} style={styles.shardBR} />
+      <DecorShape shape="flower" size={70} color="#fbbf24" opacity={0.13} rotate={20} style={styles.flowerMid} />
+
       <ScrollView
         style={styles.container}
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 32 }]}
         keyboardShouldPersistTaps="handled"
       >
-        <LinearGradient
-          colors={[Colors.primaryMuted + 'AA', 'transparent']}
-          style={styles.bgGlow}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          pointerEvents="none"
-        />
 
         <View style={styles.brand}>
           <View style={styles.logoWrap}>
@@ -214,10 +223,12 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.bg },
-  container: { flex: 1, backgroundColor: Colors.bg },
+  container: { flex: 1 },
   scroll: { flexGrow: 1, paddingHorizontal: 24, gap: 24 },
 
-  bgGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 320 },
+  cloverTL: { position: 'absolute', top: 70, left: -30 },
+  shardBR: { position: 'absolute', bottom: 180, right: -16 },
+  flowerMid: { position: 'absolute', top: '42%', left: 20 },
 
   brand: { alignItems: 'center', gap: 8 },
   logoWrap: {

@@ -10,6 +10,7 @@ import { DatoreCard } from '@/components/jobs/DatoreCard';
 import { SessioneCard } from '@/components/jobs/SessioneCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LiquidGlassSegmented } from '@/components/ui/LiquidGlassSegmented';
+import { DecorShape } from '@/components/ui/DecorShape';
 import { Colors } from '@/constants/colors';
 
 type TabValue = 'datori' | 'turni';
@@ -47,6 +48,8 @@ export default function LavoriScreen() {
         colors={[Colors.primaryMuted + '88', Colors.bg]}
         style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
+        <DecorShape shape="circuit" size={100} color="#e879f9" opacity={0.1} rotate={-10}
+          style={{ position: 'absolute', right: -18, top: 8 }} />
         <Text style={styles.title}>Lavori</Text>
         <LiquidGlassSegmented
           options={[
