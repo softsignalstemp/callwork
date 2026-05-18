@@ -1,0 +1,277 @@
+import React, { useState } from 'react';
+import {
+  View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity,
+} from 'react-native';
+import { Text, TextInput, Button } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuthStore } from '@/store/useAuthStore';
+import { Colors } from '@/constants/colors';
+
+const PASSWORD_MIN = 8;
+
+function passwordStrength(p: string): { level: 0 | 1 | 2 | 3; label: string; color: string } {
+  if (p.length === 0) return { level: 0, label: '', color: Colors.border };
+  if (p.length < PASSWORD_MIN) return { level: 1, label: 'Troppo corta', color: Colors.error };
+  const hasUpper = /[A-Z]/.test(p);
+  const hasDigit = /\d/.test(p);
+  if (hasUpper && hasDigit) return { level: 3, label: 'Forte', color: Colors.worked };
+  if (hasUpper || hasDigit) return { level: 2, label: 'Media', color: Colors.available };
+  return { level: 2, label: 'Accettabile', color: Colors.available };
+}
+
+export default function RegisterScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { signUp, loading } = useAuthStore();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const strength = passwordStrength(password);
+
+  const handleRegister = async () => {
+    setError(null);
+    if (!email.trim()) { setError('Inserisci un indirizzo email.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Email non valida.'); return; }
+    if (password.length < PASSWORD_MIN) { setError(`La password deve essere di almeno ${PASSWORD_MIN} caratteri.`); return; }
+    if (password !== confirm) { setError('Le password non coincidono.'); return; }
+
+    const result = await signUp(email.trim().toLowerCase(), password);
+    if (result === 'confirm_email') {
+      setSuccess(true);
+    } else if (result !== null) {
+      setError(result);
+    }
+    // null = success with immediate session → root layout redirects
+  };
+
+  const inputTheme = {
+    colors: {
+      primary: Colors.primary,
+      outline: Colors.border,
+      onSurfaceVariant: Colors.textSecondary,
+      background: Colors.card,
+    },
+  };
+
+  if (success) {
+    return (
+      <View style={[styles.flex, styles.successWrap, { paddingTop: insets.top }]}>
+        <View style={styles.successBox}>
+          <MaterialCommunityIcons name="email-check-outline" size={56} color={Colors.worked} />
+          <Text style={styles.successTitle}>Controlla la tua email</Text>
+          <Text style={styles.successText}>
+            Ti abbiamo inviato un link di conferma. Aprilo per attivare il tuo account.
+          </Text>
+          <Button
+            mode="contained"
+            onPress={() => router.replace('/(auth)/login')}
+            buttonColor={Colors.primary}
+            textColor="#fff"
+            style={styles.btn}
+          >
+            Torna al login
+          </Button>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 32 }]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <LinearGradient
+          colors={[Colors.primaryMuted + 'AA', 'transparent']}
+          style={styles.bgGlow}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          pointerEvents="none"
+        />
+
+        <View style={styles.brand}>
+          <View style={styles.logoWrap}>
+            <MaterialCommunityIcons name="briefcase-clock" size={40} color={Colors.primary} />
+          </View>
+          <Text style={styles.appName}>CallWork</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Crea account</Text>
+
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            mode="outlined"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            textContentType="emailAddress"
+            textColor={Colors.text}
+            style={styles.input}
+            theme={inputTheme}
+            left={<TextInput.Icon icon="email-outline" color={() => Colors.textSecondary} />}
+          />
+
+          <View style={{ gap: 6 }}>
+            <TextInput
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              mode="outlined"
+              secureTextEntry={!showPass}
+              autoCapitalize="none"
+              textContentType="newPassword"
+              textColor={Colors.text}
+              style={styles.input}
+              theme={inputTheme}
+              left={<TextInput.Icon icon="lock-outline" color={() => Colors.textSecondary} />}
+              right={
+                <TextInput.Icon
+                  icon={showPass ? 'eye-off-outline' : 'eye-outline'}
+                  color={() => Colors.textMuted}
+                  onPress={() => setShowPass(v => !v)}
+                />
+              }
+            />
+            {/* Password strength bar */}
+            {password.length > 0 && (
+              <View style={styles.strengthRow}>
+                {[1, 2, 3].map(i => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.strengthBar,
+                      { backgroundColor: i <= strength.level ? strength.color : Colors.border },
+                    ]}
+                  />
+                ))}
+                <Text style={[styles.strengthLabel, { color: strength.color }]}>{strength.label}</Text>
+              </View>
+            )}
+          </View>
+
+          <TextInput
+            label="Conferma password"
+            value={confirm}
+            onChangeText={setConfirm}
+            mode="outlined"
+            secureTextEntry={!showPass}
+            autoCapitalize="none"
+            textContentType="newPassword"
+            textColor={Colors.text}
+            style={styles.input}
+            theme={inputTheme}
+            left={<TextInput.Icon icon="lock-check-outline" color={() => Colors.textSecondary} />}
+          />
+
+          {error && (
+            <View style={styles.errorBox}>
+              <MaterialCommunityIcons name="alert-circle-outline" size={15} color={Colors.error} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          <Button
+            mode="contained"
+            onPress={handleRegister}
+            loading={loading}
+            disabled={loading}
+            buttonColor={Colors.primary}
+            textColor="#fff"
+            style={styles.btn}
+            contentStyle={{ paddingVertical: 6 }}
+            labelStyle={{ fontSize: 16, fontWeight: '700' }}
+          >
+            Crea account
+          </Button>
+        </View>
+
+        <View style={styles.switchRow}>
+          <Text style={styles.switchText}>Hai già un account?</Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={styles.switchLink}>Accedi</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: Colors.bg },
+  container: { flex: 1, backgroundColor: Colors.bg },
+  scroll: { flexGrow: 1, paddingHorizontal: 24, gap: 24 },
+
+  bgGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 320 },
+
+  brand: { alignItems: 'center', gap: 8 },
+  logoWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryMuted,
+    borderWidth: 1,
+    borderColor: Colors.primary + '55',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 10,
+  },
+  appName: { color: Colors.text, fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+
+  card: {
+    backgroundColor: Colors.card,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 24,
+    gap: 14,
+  },
+  cardTitle: { color: Colors.text, fontSize: 20, fontWeight: '800', marginBottom: 4 },
+  input: { backgroundColor: Colors.card },
+
+  strengthRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  strengthBar: { flex: 1, height: 3, borderRadius: 2 },
+  strengthLabel: { fontSize: 11, fontWeight: '600', minWidth: 70, textAlign: 'right' },
+
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.error + '18',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: Colors.error + '44',
+  },
+  errorText: { color: Colors.error, fontSize: 13, flex: 1 },
+  btn: { borderRadius: 14, marginTop: 4 },
+
+  switchRow: { flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  switchText: { color: Colors.textSecondary, fontSize: 14 },
+  switchLink: { color: Colors.primary, fontSize: 14, fontWeight: '700' },
+
+  // Success state
+  successWrap: { alignItems: 'center', justifyContent: 'center', padding: 32 },
+  successBox: { alignItems: 'center', gap: 16, maxWidth: 320 },
+  successTitle: { color: Colors.text, fontSize: 22, fontWeight: '800', textAlign: 'center' },
+  successText: { color: Colors.textSecondary, fontSize: 15, textAlign: 'center', lineHeight: 22 },
+});

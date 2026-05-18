@@ -1,27 +1,58 @@
 import 'react-native-reanimated';
 import React, { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { darkTheme, lightTheme } from '@/theme';
 import { initDb } from '@/db/schema';
 import { useLavoriStore } from '@/store/useLavoriStore';
 import { Colors } from '@/constants/colors';
 
+function useAuthRedirect() {
+  const { session, initialized } = useAuthStore();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (!initialized) return;
+
+    const inAuth = segments[0] === '(auth)';
+
+    if (!session && !inAuth) {
+      router.replace('/(auth)/login');
+    } else if (session && inAuth) {
+      router.replace('/(tabs)');
+    }
+  }, [session, initialized, segments]);
+}
+
 export default function RootLayout() {
   const { darkMode, hydrate } = useSettingsStore();
+  const { initialize, initialized } = useAuthStore();
   const caricaDati = useLavoriStore((s) => s.caricaDati);
 
   useEffect(() => {
-    // DB init must complete before loading data — both are sync
     hydrate();
-    initDb();      // sync: creates tables if missing
-    caricaDati();  // sync: reads from now-initialized tables
-  }, []);
+    initDb();
+    caricaDati();
+    initialize();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useAuthRedirect();
 
   const theme = darkMode === false ? lightTheme : darkTheme;
+
+  // Show spinner until auth state is resolved (avoids flash of wrong screen)
+  if (!initialized) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={Colors.primary} size="large" />
+      </View>
+    );
+  }
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -32,6 +63,7 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: Colors.bg },
           }}
         >
+          <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen
             name="lavori/registra"
@@ -61,4 +93,12 @@ export default function RootLayout() {
   );
 }
 
-const styles = StyleSheet.create({ root: { flex: 1 } });
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  loading: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

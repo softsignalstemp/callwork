@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { getDb } from '@/db/schema';
 import { useLavoriStore } from '@/store/useLavoriStore';
 import { exportCsv, availableMonths, meseLabel } from '@/utils/exportCsv';
@@ -49,7 +50,15 @@ function SectionHeader({ title }: { title: string }) {
 export default function ImpostazioniScreen() {
   const insets = useSafeAreaInsets();
   const { darkMode, toggleDarkMode } = useSettingsStore();
+  const { signOut, user } = useAuthStore();
   const caricaDati = useLavoriStore((s) => s.caricaDati);
+
+  const handleSignOut = () => {
+    Alert.alert('Disconnetti', 'Vuoi disconnetterti dall\'account?', [
+      { text: 'Annulla', style: 'cancel' },
+      { text: 'Disconnetti', style: 'destructive', onPress: () => signOut() },
+    ]);
+  };
 
   const [integrityResult, setIntegrityResult] = useState<string | null>(null);
   const [showIntegrity, setShowIntegrity] = useState(false);
@@ -130,6 +139,24 @@ export default function ImpostazioniScreen() {
       </LinearGradient>
 
       <View style={styles.content}>
+        {/* ── Account ── */}
+        <SectionHeader title="Account" />
+        <View style={styles.card}>
+          <SettingRow
+            icon="account-outline"
+            label="Email"
+            description={user?.email ?? '—'}
+          />
+          <View style={styles.separator} />
+          <SettingRow
+            icon="logout"
+            label="Disconnetti"
+            description="Esci dall'account corrente"
+            onPress={handleSignOut}
+            danger
+          />
+        </View>
+
         {/* ── Aspetto ── */}
         <SectionHeader title="Aspetto" />
         <View style={styles.card}>
