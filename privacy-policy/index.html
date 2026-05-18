@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Informativa sulla Privacy — CallWork</title>
+  <style>
+    :root {
+      --bg: #07070f;
+      --surface: #0f0f1a;
+      --card: #13132a;
+      --border: #2a2a5a;
+      --primary: #8b5cf6;
+      --primary-glow: #c084fc;
+      --text: #f0eeff;
+      --text-secondary: #9b8fcc;
+      --text-muted: #4a4475;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.7;
+      padding: 0;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(160deg, #2d1b69 0%, var(--bg) 60%);
+      padding: 60px 24px 48px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .logo-text {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--primary-glow), var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 16px;
+    }
+
+    /* Layout */
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* Sections */
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 20px; right: 20px;
+      height: 1px;
+      background: var(--primary);
+      opacity: 0.2;
+    }
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--primary);
+      margin-bottom: 14px;
+    }
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 18px 0 8px;
+    }
+    h3:first-child { margin-top: 0; }
+
+    p { color: var(--text-secondary); margin-bottom: 12px; }
+    p:last-child { margin-bottom: 0; }
+
+    ul {
+      color: var(--text-secondary);
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+    li { margin-bottom: 6px; }
+
+    strong { color: var(--text); font-weight: 600; }
+
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Highlight box */
+    .highlight {
+      background: rgba(139,92,246,0.08);
+      border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 16px 0;
+    }
+    .highlight p { margin: 0; }
+
+    /* Last updated */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">CallWork</div>
+  <p>Informativa sulla Privacy</p>
+  <div class="badge">GDPR Compliant</div>
+</header>
+
+<main>
+
+  <section>
+    <h2>1. Titolare del Trattamento</h2>
+    <p>
+      Il titolare del trattamento dei dati personali è <strong>SoftSignals</strong>
+      (<a href="mailto:admin@softsignals.it">admin@softsignals.it</a>).
+    </p>
+    <p>
+      Per qualsiasi domanda relativa al trattamento dei tuoi dati puoi scrivere
+      all'indirizzo email sopra indicato.
+    </p>
+  </section>
+
+  <section>
+    <h2>2. Dati Raccolti</h2>
+
+    <h3>Account email e password</h3>
+    <p>
+      Se scegli di registrarti tramite <strong>email e password</strong>, raccogliamo
+      e conserviamo:
+    </p>
+    <ul>
+      <li>Indirizzo email</li>
+      <li>Password (conservata in forma cifrata e non leggibile da nessuno)</li>
+    </ul>
+
+    <h3>Accesso tramite provider terzi (Apple, Google)</h3>
+    <p>
+      Se scegli di accedere tramite <strong>Sign in with Apple</strong> o
+      <strong>Google</strong>, raccogliamo esclusivamente:
+    </p>
+    <ul>
+      <li>Indirizzo email fornito dal provider</li>
+    </ul>
+    <p>
+      Non riceviamo né conserviamo la password del tuo account Apple o Google.
+      Il processo di autenticazione avviene interamente sui server del rispettivo provider.
+    </p>
+
+    <h3>Dati generati dall'utilizzo dell'app</h3>
+    <p>
+      I dati relativi ai turni lavorativi, datori di lavoro, orari e guadagni
+      che inserisci nell'app sono <strong>conservati localmente sul tuo dispositivo</strong>
+      e non vengono trasmessi a server esterni.
+    </p>
+
+    <div class="highlight">
+      <p>
+        <strong>Non raccogliamo</strong> dati di geolocalizzazione, contatti, fotografie,
+        dati biometrici o qualsiasi altra informazione personale oltre a quelle
+        elencate sopra.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Finalità del Trattamento</h2>
+    <p>I tuoi dati vengono utilizzati <strong>esclusivamente</strong> per:</p>
+    <ul>
+      <li>Consentire l'accesso sicuro all'app tramite autenticazione</li>
+      <li>Identificare il tuo account in caso di recupero accesso</li>
+    </ul>
+    <p>
+      <strong>Non utilizziamo i tuoi dati per nessun altro scopo</strong>, incluse
+      attività di marketing, profilazione, pubblicità o analisi del comportamento.
+    </p>
+  </section>
+
+  <section>
+    <h2>4. Marketing e Comunicazioni</h2>
+    <div class="highlight">
+      <p>
+        <strong>Non riceverai mai email di marketing, newsletter o comunicazioni
+        promozionali.</strong> Il tuo indirizzo email è utilizzato unicamente per
+        l'autenticazione e, se necessario, per il recupero dell'accesso.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Dati Diagnostici e Monitoraggio</h2>
+    <p>
+      L'app può raccogliere dati diagnostici anonimi tramite gli
+      <strong>strumenti nativi di Apple</strong> (App Store Connect / TestFlight Analytics),
+      inclusi dati di crash e prestazioni del dispositivo.
+    </p>
+    <p>
+      Questi dati sono:
+    </p>
+    <ul>
+      <li><strong>Anonimi</strong> — non associabili al tuo account o identità</li>
+      <li>Raccolti e gestiti interamente da Apple secondo la propria privacy policy</li>
+      <li>Utilizzati esclusivamente per migliorare la stabilità dell'app</li>
+    </ul>
+    <p>
+      Non utilizziamo SDK di analisi di terze parti (es. Firebase, Mixpanel,
+      Amplitude o simili).
+    </p>
+  </section>
+
+  <section>
+    <h2>6. Base Giuridica (GDPR)</h2>
+    <p>
+      Il trattamento dei dati si basa sulle seguenti basi giuridiche ai sensi
+      dell'art. 6 del Regolamento UE 2016/679 (GDPR):
+    </p>
+    <ul>
+      <li>
+        <strong>Esecuzione di un contratto</strong> (art. 6, par. 1, lett. b):
+        l'email è necessaria per fornire il servizio di autenticazione richiesto.
+      </li>
+      <li>
+        <strong>Legittimo interesse</strong> (art. 6, par. 1, lett. f):
+        dati diagnostici anonimi per garantire la sicurezza e il corretto funzionamento
+        dell'app.
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>7. Conservazione dei Dati</h2>
+    <p>
+      I dati del tuo account (email) sono conservati finché mantieni un account attivo.
+      Alla cancellazione dell'account, tutti i dati vengono eliminati in modo definitivo
+      entro <strong>30 giorni</strong>.
+    </p>
+    <p>
+      I dati inseriti nell'app (turni, datori ecc.) risiedono solo sul tuo dispositivo
+      e vengono eliminati con la disinstallazione dell'app.
+    </p>
+  </section>
+
+  <section>
+    <h2>8. Condivisione con Terze Parti</h2>
+    <p>
+      I tuoi dati <strong>non vengono venduti, ceduti o condivisi</strong> con terze
+      parti per nessun motivo.
+    </p>
+    <p>L'unico servizio esterno utilizzato è:</p>
+    <ul>
+      <li>
+        <strong>Supabase</strong> (autenticazione) — con server in Europa, certificato
+        ISO 27001 e conforme GDPR.
+        <a href="https://supabase.com/privacy" target="_blank" rel="noopener">
+          Privacy Policy Supabase →
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>9. I Tuoi Diritti (GDPR)</h2>
+    <p>Hai il diritto di:</p>
+    <ul>
+      <li><strong>Accesso</strong> — richiedere una copia dei tuoi dati personali</li>
+      <li><strong>Rettifica</strong> — correggere dati inesatti</li>
+      <li><strong>Cancellazione</strong> ("diritto all'oblio") — eliminare il tuo account</li>
+      <li><strong>Portabilità</strong> — ricevere i tuoi dati in formato strutturato</li>
+      <li><strong>Opposizione</strong> — opporti al trattamento basato su legittimo interesse</li>
+      <li><strong>Reclamo</strong> — presentare reclamo al Garante Privacy italiano</li>
+    </ul>
+    <p>
+      Per esercitare questi diritti scrivi a
+      <a href="mailto:admin@softsignals.it">admin@softsignals.it</a>.
+    </p>
+  </section>
+
+  <section>
+    <h2>10. Sicurezza</h2>
+    <p>
+      Le password sono cifrate con algoritmo bcrypt e non sono mai leggibili,
+      nemmeno da parte nostra. Le comunicazioni con il server avvengono
+      esclusivamente tramite HTTPS/TLS.
+    </p>
+  </section>
+
+  <section>
+    <h2>11. Modifiche a questa Informativa</h2>
+    <p>
+      Eventuali modifiche alla presente informativa saranno pubblicate su questa
+      pagina con aggiornamento della data di revisione. Per modifiche sostanziali,
+      l'utente sarà informato tramite notifica in-app.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <p>Ultimo aggiornamento: <strong>Maggio 2026</strong></p>
+  <p style="margin-top:8px">
+    CallWork · <a href="mailto:admin@softsignals.it">admin@softsignals.it</a>
+  </p>
+</footer>
+
+</body>
+</html>
