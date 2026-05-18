@@ -229,7 +229,7 @@ export default function RegisterScreen() {
             disabled={loading || !privacyAccepted}
             buttonColor={Colors.primary}
             textColor="#fff"
-            style={styles.btn}
+            style={[styles.btn, { opacity: privacyAccepted ? 1 : 0.35 }]}
             contentStyle={{ paddingVertical: 6 }}
             labelStyle={{ fontSize: 16, fontWeight: '700' }}
           >
@@ -251,7 +251,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.bg },
   container: { flex: 1 },
-  scroll: { flexGrow: 1, paddingHorizontal: 24, gap: 24 },
+  scroll: { flexGrow: 1, paddingHorizontal: 12, gap: 24 },
 
   cloverTL: { position: 'absolute', top: 70, left: -30 },
   shardBR: { position: 'absolute', bottom: 180, right: -16 },
@@ -277,10 +277,10 @@ const styles = StyleSheet.create({
 
   card: {
     backgroundColor: Colors.card,
-    borderRadius: 24,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.border,
-    padding: 24,
+    padding: 16,
     gap: 14,
   },
   cardTitle: { color: Colors.text, fontSize: 20, fontWeight: '800', marginBottom: 4 },

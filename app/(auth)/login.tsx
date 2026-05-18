@@ -154,7 +154,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.bg },
   container: { flex: 1 },
-  scroll: { flexGrow: 1, paddingHorizontal: 24, gap: 28 },
+  scroll: { flexGrow: 1, paddingHorizontal: 12, gap: 28 },
 
   // Decorative shapes (absolute)
   shardTR: { position: 'absolute', top: 60, right: -24 },
@@ -183,10 +183,10 @@ const styles = StyleSheet.create({
 
   card: {
     backgroundColor: Colors.card + 'EE',
-    borderRadius: 24,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.border,
-    padding: 24,
+    padding: 16,
     gap: 14,
   },
   cardTitle: { color: Colors.text, fontSize: 20, fontWeight: '800', marginBottom: 4 },
