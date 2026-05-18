@@ -25,48 +25,70 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 const PAD_H = 12;
 const PAD_TOP = 20;
 const PAD_BOTTOM = 28;
-const DOT_R = 4;
-const HIT_R = 20;
+const DOT_R = 4.5;
+const HIT_R = 22;
 
-interface Point extends DayData {
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface EnrichedPoint extends DayData {
+  cumulative: number;   // running total up to this day
+  isPast: boolean;      // true if date <= today
   x: number;
-  y: number;
+  y: number | null;     // null for future days (no line drawn)
 }
 
-function buildPoints(data: DayData[], chartW: number, chartH: number, maxVal: number): Point[] {
-  if (data.length === 0) return [];
-  const spanX = data.length > 1 ? data.length - 1 : 1;
-  return data.map((d, i) => ({
-    ...d,
-    x: PAD_H + (i / spanX) * chartW,
-    y: PAD_TOP + (1 - d.guadagno / maxVal) * chartH,
-  }));
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function buildEnrichedPoints(
+  data: DayData[],
+  chartW: number,
+  chartH: number,
+  maxCumulative: number,
+  todayStr: string
+): EnrichedPoint[] {
+  let running = 0;
+  const n = data.length;
+  return data.map((d, i) => {
+    const isPast = d.date <= todayStr;
+    if (isPast) running += d.guadagno;
+    const cumulative = running; // future days hold last known total
+    const x = PAD_H + (n > 1 ? (i / (n - 1)) * chartW : chartW / 2);
+    const y = isPast
+      ? PAD_TOP + (1 - cumulative / maxCumulative) * chartH
+      : null;
+    return { ...d, cumulative, isPast, x, y };
+  });
 }
 
-function buildLinePath(pts: Point[]): string {
-  return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+function buildLinePath(pts: EnrichedPoint[]): string {
+  const active = pts.filter((p): p is EnrichedPoint & { y: number } => p.y !== null);
+  return active.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 }
 
-function buildAreaPath(pts: Point[], chartBottom: number): string {
-  if (pts.length === 0) return '';
-  const line = buildLinePath(pts);
-  const last = pts[pts.length - 1];
-  const first = pts[0];
+function buildAreaPath(pts: EnrichedPoint[], chartBottom: number): string {
+  const active = pts.filter((p): p is EnrichedPoint & { y: number } => p.y !== null);
+  if (active.length === 0) return '';
+  const line = active.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const last = active[active.length - 1];
+  const first = active[0];
   return `${line} L${last.x.toFixed(1)},${chartBottom.toFixed(1)} L${first.x.toFixed(1)},${chartBottom.toFixed(1)} Z`;
 }
 
-function calcPathLength(pts: Point[]): number {
+function calcPathLength(pts: EnrichedPoint[]): number {
+  const active = pts.filter((p): p is EnrichedPoint & { y: number } => p.y !== null);
   let len = 0;
-  for (let i = 1; i < pts.length; i++) {
-    const dx = pts[i].x - pts[i - 1].x;
-    const dy = pts[i].y - pts[i - 1].y;
+  for (let i = 1; i < active.length; i++) {
+    const dx = active[i].x - active[i - 1].x;
+    const dy = active[i].y - active[i - 1].y;
     len += Math.sqrt(dx * dx + dy * dy);
   }
   return Math.max(len, 1);
 }
 
+// ─── Component ───────────────────────────────────────────────────────────────
+
 interface LineChartProps {
-  data: DayData[];
+  data: DayData[];   // full month, all days
   height?: number;
 }
 
@@ -78,15 +100,26 @@ export function LineChart({ data, height = 210 }: LineChartProps) {
   const chartW = width - PAD_H * 2;
   const chartH = height - PAD_TOP - PAD_BOTTOM;
   const chartBottom = PAD_TOP + chartH;
-  const maxVal = Math.max(...data.map((d) => d.guadagno), 1) * 1.1;
+  const todayStr = new Date().toISOString().slice(0, 10);
 
-  const pts = width > 0 ? buildPoints(data, chartW, chartH, maxVal) : [];
+  // Max cumulative value for scaling
+  let running = 0;
+  const maxCumulative = Math.max(
+    ...data.map(d => { if (d.date <= todayStr) running += d.guadagno; return running; }),
+    1
+  ) * 1.1;
+
+  const pts = width > 0
+    ? buildEnrichedPoints(data, chartW, chartH, maxCumulative, todayStr)
+    : [];
+
+  const activePts = pts.filter(p => p.isPast);
   const linePath = buildLinePath(pts);
   const areaPath = buildAreaPath(pts, chartBottom);
   const pathLength = calcPathLength(pts);
 
   useEffect(() => {
-    if (width === 0 || pts.length === 0) return;
+    if (width === 0 || activePts.length === 0) return;
     progress.value = 0;
     progress.value = withTiming(1, { duration: 1600, easing: Easing.out(Easing.cubic) });
   }, [width, data.length]);
@@ -97,64 +130,82 @@ export function LineChart({ data, height = 210 }: LineChartProps) {
 
   const selectedPt = selected !== null ? pts[selected] : null;
 
-  // X-axis labels: show every ~5 days, always show last
-  const labelIndices = new Set<number>();
-  for (let i = 0; i < pts.length; i += 5) labelIndices.add(i);
-  if (pts.length > 0) labelIndices.add(pts.length - 1);
+  // X-axis label indices: every 5 days + first + last
+  const labelIndices = new Set<number>([0]);
+  for (let i = 4; i < data.length; i += 5) labelIndices.add(i);
+  labelIndices.add(data.length - 1);
 
   return (
     <TouchableWithoutFeedback onPress={() => setSelected(null)}>
       <View
         style={[styles.container, { height }]}
-        onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+        onLayout={e => setWidth(e.nativeEvent.layout.width)}
       >
-        {width > 0 && pts.length > 0 && (
+        {width > 0 && activePts.length > 0 && (
           <Svg width={width} height={height}>
             <Defs>
               <SvgGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%" stopColor={Colors.primary} stopOpacity="0.28" />
-                <Stop offset="85%" stopColor={Colors.primary} stopOpacity="0" />
+                <Stop offset="0%" stopColor={Colors.primary} stopOpacity="0.3" />
+                <Stop offset="100%" stopColor={Colors.primary} stopOpacity="0" />
               </SvgGradient>
             </Defs>
 
-            {/* Area fill — not animated, appears immediately */}
+            {/* Area fill */}
             <Path d={areaPath} fill="url(#areaFill)" />
 
-            {/* Animated draw-in line */}
-            <AnimatedPath
-              animatedProps={animatedLineProps}
-              d={linePath}
-              stroke={Colors.primary}
-              strokeWidth={2.5}
-              strokeDasharray={`${pathLength} ${pathLength}`}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            {/* Dashed future extension line (flat from last active to end of month) */}
+            {activePts.length > 0 && activePts.length < pts.length && (() => {
+              const lastActive = activePts[activePts.length - 1];
+              const lastPt = pts[pts.length - 1];
+              return (
+                <Line
+                  x1={lastActive.x}
+                  y1={lastActive.y!}
+                  x2={lastPt.x}
+                  y2={lastActive.y!}
+                  stroke={Colors.border}
+                  strokeWidth={1.5}
+                  strokeDasharray="4 5"
+                  opacity={0.5}
+                />
+              );
+            })()}
 
-            {/* Dots */}
+            {/* Animated draw-in line */}
+            {activePts.length > 1 && (
+              <AnimatedPath
+                animatedProps={animatedLineProps}
+                d={linePath}
+                stroke={Colors.primary}
+                strokeWidth={2.5}
+                strokeDasharray={`${pathLength} ${pathLength}`}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+
+            {/* Dots — only past days with earnings */}
             {pts.map((p, i) => {
+              if (!p.isPast) return null;
               const isSelected = selected === i;
               const hasEarnings = p.guadagno > 0;
               return (
                 <React.Fragment key={p.date}>
-                  {/* Outer glow ring on selected */}
                   {isSelected && (
-                    <Circle cx={p.x} cy={p.y} r={13} fill={Colors.primaryGlow} opacity={0.18} />
+                    <Circle cx={p.x} cy={p.y!} r={14} fill={Colors.primaryGlow} opacity={0.15} />
                   )}
-                  {/* Dot */}
                   <Circle
                     cx={p.x}
-                    cy={p.y}
-                    r={isSelected ? DOT_R + 1.5 : hasEarnings ? DOT_R : 2}
+                    cy={p.y!}
+                    r={isSelected ? DOT_R + 1.5 : hasEarnings ? DOT_R : 2.5}
                     fill={isSelected ? Colors.primaryGlow : hasEarnings ? Colors.primary : Colors.border}
                     stroke={isSelected ? Colors.primaryGlow : Colors.card}
                     strokeWidth={isSelected ? 2.5 : 1.5}
                   />
-                  {/* Invisible large hit target */}
                   <Circle
                     cx={p.x}
-                    cy={p.y}
+                    cy={p.y!}
                     r={HIT_R}
                     fill="transparent"
                     onPress={() => setSelected(selected === i ? null : i)}
@@ -164,47 +215,69 @@ export function LineChart({ data, height = 210 }: LineChartProps) {
             })}
 
             {/* Vertical dashed line on selected */}
-            {selectedPt && (
+            {selectedPt?.y != null && (
               <Line
-                x1={selectedPt.x}
-                y1={PAD_TOP}
-                x2={selectedPt.x}
-                y2={chartBottom}
+                x1={selectedPt.x} y1={PAD_TOP}
+                x2={selectedPt.x} y2={chartBottom}
                 stroke={Colors.primaryGlow}
                 strokeWidth={1}
                 strokeDasharray="4 3"
-                opacity={0.45}
+                opacity={0.4}
               />
             )}
 
             {/* X-axis day labels */}
-            {pts.filter((_, i) => labelIndices.has(i)).map((p) => (
-              <SvgText
-                key={`lbl-${p.day}`}
-                x={p.x}
-                y={height - 6}
-                textAnchor="middle"
-                fontSize={10}
-                fill={selected !== null && pts[selected].day === p.day
-                  ? Colors.primaryGlow
-                  : Colors.textMuted}
-                fontWeight={selected !== null && pts[selected].day === p.day ? '700' : '400'}
-              >
-                {p.day}
-              </SvgText>
-            ))}
+            {pts.filter((_, i) => labelIndices.has(i)).map((p, _, arr) => {
+              const isSelected = selected !== null && pts[selected].day === p.day;
+              return (
+                <SvgText
+                  key={`lbl-${p.day}`}
+                  x={p.x}
+                  y={height - 6}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fill={isSelected ? Colors.primaryGlow : p.isPast ? Colors.textMuted : Colors.border}
+                  fontWeight={isSelected ? '700' : '400'}
+                >
+                  {p.day}
+                </SvgText>
+              );
+            })}
+          </Svg>
+        )}
+
+        {/* Single dot fallback (day 1 only) */}
+        {width > 0 && activePts.length === 1 && (
+          <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
+            <Circle
+              cx={activePts[0].x}
+              cy={activePts[0].y!}
+              r={DOT_R + 2}
+              fill={Colors.primary}
+              stroke={Colors.card}
+              strokeWidth={2}
+            />
+            <SvgText
+              x={activePts[0].x}
+              y={activePts[0].y! - 12}
+              textAnchor="middle"
+              fontSize={11}
+              fill={Colors.primaryGlow}
+              fontWeight="700"
+            >
+              {formatEuro(activePts[0].cumulative)}
+            </SvgText>
           </Svg>
         )}
 
         {/* Tooltip */}
-        {selectedPt && selected !== null && (
+        {selectedPt?.y != null && selected !== null && (
           <View
             style={[
               styles.tooltip,
               {
-                // Clamp so tooltip never goes off-screen
-                left: Math.max(4, Math.min(selectedPt.x - 52, width - 112)),
-                top: Math.max(2, selectedPt.y - 68),
+                left: Math.max(4, Math.min(selectedPt.x - 52, width - 116)),
+                top: Math.max(2, selectedPt.y - 72),
               },
             ]}
             pointerEvents="none"
@@ -213,12 +286,17 @@ export function LineChart({ data, height = 210 }: LineChartProps) {
               {data[selected].date.slice(8)}/{data[selected].date.slice(5, 7)}
             </Text>
             <Text style={styles.tooltipValue}>
-              {formatEuro(data[selected].guadagno)}
+              {formatEuro(pts[selected].cumulative)}
             </Text>
+            {data[selected].guadagno > 0 && (
+              <Text style={styles.tooltipDaily}>
+                +{formatEuro(data[selected].guadagno)} oggi
+              </Text>
+            )}
           </View>
         )}
 
-        {width > 0 && pts.length === 0 && (
+        {width > 0 && activePts.length === 0 && (
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyText}>Nessuna sessione questo mese</Text>
           </View>
@@ -240,27 +318,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     alignItems: 'center',
-    gap: 2,
-    minWidth: 100,
-    // Shadow/glow
+    gap: 1,
+    minWidth: 108,
     shadowColor: Colors.primary,
     shadowOpacity: 0.35,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
     elevation: 6,
   },
-  tooltipDate: {
-    color: Colors.textSecondary,
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  tooltipValue: {
-    color: Colors.primaryGlow,
-    fontSize: 17,
-    fontWeight: '900',
-    letterSpacing: -0.3,
-  },
+  tooltipDate: { color: Colors.textSecondary, fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
+  tooltipValue: { color: Colors.primaryGlow, fontSize: 17, fontWeight: '900', letterSpacing: -0.3 },
+  tooltipDaily: { color: Colors.worked, fontSize: 10, fontWeight: '600' },
 
   emptyWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyText: { color: Colors.textMuted, fontSize: 13 },
