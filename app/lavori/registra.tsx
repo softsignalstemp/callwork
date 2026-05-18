@@ -173,12 +173,13 @@ export default function RegistraScreen() {
 
       {/* ── RIEPILOGO LIVE ─────────────────────────────── */}
       {ore > 0 && datore ? (
-        <LinearGradient
-          colors={[Colors.primaryMuted, Colors.card]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.summary}
-        >
+        <View style={styles.summary}>
+          <LinearGradient
+            colors={['transparent', Colors.primary + '18', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
           <View style={styles.summaryRow}>
             <Text style={styles.summaryOre}>{formatOre(ore)}</Text>
             <Text style={styles.summaryEq}>=</Text>
@@ -188,7 +189,7 @@ export default function RegistraScreen() {
             {formatEuro(pagaOraria)}/h × {ore.toFixed(2)}h
             {isOverride && <Text style={{ color: Colors.available }}> (paga modificata)</Text>}
           </Text>
-        </LinearGradient>
+        </View>
       ) : ore <= 0 && oraFine <= oraInizio ? (
         <View style={styles.warningBox}>
           <MaterialCommunityIcons name="alert-circle-outline" size={16} color={Colors.error} />
@@ -350,9 +351,10 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     gap: 4,
-    marginTop: 4,
     borderWidth: 1,
-    borderColor: Colors.primary + '44',
+    borderColor: Colors.primary + '33',
+    backgroundColor: Colors.card,
+    overflow: 'hidden',
   },
   summaryRow: { flexDirection: 'row', alignItems: 'baseline', gap: 12 },
   summaryOre: { color: Colors.textSecondary, fontSize: 20, fontWeight: '700' },
