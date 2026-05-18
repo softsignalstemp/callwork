@@ -7,7 +7,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withDelay,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,14 +24,12 @@ import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { formatEuro, formatOre, monthLabel, prevMonth, nextMonth } from '@/utils/formatters';
 import { Colors } from '@/constants/colors';
 
-function useFadeSlide(delayMs = 0) {
+function useFadeIn(delayMs = 0) {
   const opacity = useSharedValue(0);
-  const ty = useSharedValue(20);
   useEffect(() => {
-    opacity.value = withDelay(delayMs, withTiming(1, { duration: 450 }));
-    ty.value = withDelay(delayMs, withSpring(0, { damping: 20 }));
+    opacity.value = withDelay(delayMs, withTiming(1, { duration: 400 }));
   }, []);
-  return useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ translateY: ty.value }] }));
+  return useAnimatedStyle(() => ({ opacity: opacity.value }));
 }
 
 export default function HomeScreen() {
@@ -42,11 +39,11 @@ export default function HomeScreen() {
   const stats = useMonthlyStats();
   const [refreshing, setRefreshing] = React.useState(false);
 
-  const s0 = useFadeSlide(0);
-  const s1 = useFadeSlide(100);
-  const s2 = useFadeSlide(180);
-  const s3 = useFadeSlide(260);
-  const s4 = useFadeSlide(340);
+  const s0 = useFadeIn(0);
+  const s1 = useFadeIn(100);
+  const s2 = useFadeIn(180);
+  const s3 = useFadeIn(260);
+  const s4 = useFadeIn(340);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -63,7 +60,7 @@ export default function HomeScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
+      contentContainerStyle={{ paddingBottom: 100 + insets.bottom, gap: 12 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
     >
       {/* ── HERO ── */}
@@ -107,7 +104,7 @@ export default function HomeScreen() {
       </Animated.View>
 
       {/* ── QUICK REGISTER BUTTON ── */}
-      <Animated.View style={[{ paddingHorizontal: 16 }, s2]}>
+      <Animated.View style={[styles.quickRegWrap, s2]}>
         <GlassButton onPress={() => router.push('/lavori/registra')} style={styles.quickRegBtn}>
           <View style={styles.quickRegInner}>
             <View style={styles.quickRegIcon}>
@@ -196,6 +193,7 @@ const styles = StyleSheet.create({
   },
 
   // Quick register
+  quickRegWrap: { paddingHorizontal: 16 },
   quickRegBtn: {
     width: '100%',
   },
@@ -228,10 +226,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 16,
-    marginTop: 4,
   },
 
-  section: { margin: 16, padding: 20, marginBottom: 0 },
+  section: { marginHorizontal: 16, padding: 20 },
   sectionTitle: {
     color: Colors.text,
     fontSize: 12,
@@ -249,7 +246,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     opacity: 0.7,
     paddingHorizontal: 16,
-    marginTop: 20,
     marginBottom: 10,
   },
   emptyChart: { height: 80, alignItems: 'center', justifyContent: 'center' },
