@@ -22,13 +22,30 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialized: false,
 
   initialize: async () => {
-    // Restore persisted session from AsyncStorage
-    const { data: { session } } = await supabase.auth.getSession();
-    set({ session, user: session?.user ?? null, initialized: true });
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error) {
+        // Refresh token invalid or expired — clear and go to login
+        console.warn('[auth] Session restore failed, clearing:', error.message);
+        await supabase.auth.signOut();
+        set({ session: null, user: null, initialized: true });
+        return;
+      }
+
+      set({ session, user: session?.user ?? null, initialized: true });
+    } catch (e) {
+      console.warn('[auth] initialize error:', e);
+      set({ session: null, user: null, initialized: true });
+    }
 
     // Listen for auth state changes (token refresh, sign out, etc.)
-    supabase.auth.onAuthStateChange((_event, session) => {
-      set({ session, user: session?.user ?? null });
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+        set({ session, user: session?.user ?? null });
+      } else if (event === 'SIGNED_OUT') {
+        set({ session: null, user: null });
+      }
     });
   },
 
