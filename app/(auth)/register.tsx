@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 import { useAuthStore } from '@/store/useAuthStore';
 import { DecorShape } from '@/components/ui/DecorShape';
+import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons';
 import { LOGO_SVG } from '@/constants/logo';
 import { Colors } from '@/constants/colors';
 
@@ -234,6 +235,8 @@ export default function RegisterScreen() {
           >
             Crea account
           </Button>
+
+          <SocialAuthButtons />
         </View>
 
         <View style={styles.switchRow}>
