@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ImageBackground,
+  View, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ImageBackground, Linking,
 } from 'react-native';
 import { Text, TextInput, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
@@ -34,6 +34,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPass, setShowPass] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -45,6 +46,7 @@ export default function RegisterScreen() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Email non valida.'); return; }
     if (password.length < PASSWORD_MIN) { setError(`La password deve essere di almeno ${PASSWORD_MIN} caratteri.`); return; }
     if (password !== confirm) { setError('Le password non coincidono.'); return; }
+    if (!privacyAccepted) { setError('Devi accettare l\'informativa sulla privacy per continuare.'); return; }
 
     const result = await signUp(email.trim().toLowerCase(), password);
     if (result === 'confirm_email') {
@@ -188,6 +190,31 @@ export default function RegisterScreen() {
             left={<TextInput.Icon icon="lock-check-outline" color={() => Colors.textSecondary} />}
           />
 
+          {/* Privacy checkbox */}
+          <TouchableOpacity
+            onPress={() => setPrivacyAccepted(v => !v)}
+            activeOpacity={0.75}
+            style={styles.privacyRow}
+          >
+            <View style={[
+              styles.checkbox,
+              privacyAccepted && { backgroundColor: Colors.primary, borderColor: Colors.primary },
+            ]}>
+              {privacyAccepted && (
+                <MaterialCommunityIcons name="check" size={14} color="#fff" />
+              )}
+            </View>
+            <Text style={styles.privacyText}>
+              Ho letto e accetto l'
+              <Text
+                style={styles.privacyLink}
+                onPress={() => Linking.openURL('https://privacy.callwork.softsignals.it')}
+              >
+                informativa sulla privacy
+              </Text>
+            </Text>
+          </TouchableOpacity>
+
           {error && (
             <View style={styles.errorBox}>
               <MaterialCommunityIcons name="alert-circle-outline" size={15} color={Colors.error} />
@@ -199,7 +226,7 @@ export default function RegisterScreen() {
             mode="contained"
             onPress={handleRegister}
             loading={loading}
-            disabled={loading}
+            disabled={loading || !privacyAccepted}
             buttonColor={Colors.primary}
             textColor="#fff"
             style={styles.btn}
@@ -262,6 +289,22 @@ const styles = StyleSheet.create({
   strengthRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   strengthBar: { flex: 1, height: 3, borderRadius: 2 },
   strengthLabel: { fontSize: 11, fontWeight: '600', minWidth: 70, textAlign: 'right' },
+
+  privacyRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+    flexShrink: 0,
+  },
+  privacyText: { color: Colors.textSecondary, fontSize: 13, flex: 1, lineHeight: 20 },
+  privacyLink: { color: Colors.primary, fontWeight: '600' },
 
   errorBox: {
     flexDirection: 'row',
