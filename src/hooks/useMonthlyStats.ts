@@ -32,9 +32,11 @@ export function useMonthlyStats() {
 
     // All days 1..today (or end of month for past months)
     const [year, month] = meseSelezionato.split('-').map(Number);
-    // Always full calendar month — the chart handles "up to today" internally
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const daysOfMonth: DayData[] = Array.from({ length: daysInMonth }, (_, i) => {
+    // Current month: days 1..today. Past months: full month.
+    const now = new Date();
+    const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
+    const lastDay = isCurrentMonth ? now.getDate() : new Date(year, month, 0).getDate();
+    const daysOfMonth: DayData[] = Array.from({ length: lastDay }, (_, i) => {
       const day = i + 1;
       const date = `${meseSelezionato}-${String(day).padStart(2, '0')}`;
       return { day, date, guadagno: perGiorno[date] ?? 0 };
