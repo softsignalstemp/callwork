@@ -16,7 +16,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "it.softsignals.callwork",
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -43,6 +46,12 @@
         "projectId": "1928f292-9cae-4aa2-9f49-c941ff37b7e6"
       }
     },
-    "owner": "softsignalss-organization"
+    "owner": "softsignalss-organization",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/1928f292-9cae-4aa2-9f49-c941ff37b7e6"
+    }
   }
 }
