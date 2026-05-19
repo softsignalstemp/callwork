@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Session, User } from '@supabase/supabase-js';
+import type { Session, Subscription, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
 interface AuthState {
@@ -15,6 +15,8 @@ interface AuthState {
   signOut: () => Promise<void>;
 }
 
+let authSubscription: Subscription | null = null;
+
 export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   user: null,
@@ -22,6 +24,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialized: false,
 
   initialize: async () => {
+    authSubscription?.unsubscribe();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+        set({ session, user: session?.user ?? null });
+      } else if (event === 'SIGNED_OUT') {
+        set({ session: null, user: null });
+      }
+    });
+    authSubscription = subscription;
+
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
 
@@ -36,17 +49,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ session, user: session?.user ?? null, initialized: true });
     } catch (e) {
       console.warn('[auth] initialize error:', e);
+      try { await supabase.auth.signOut(); } catch {}
       set({ session: null, user: null, initialized: true });
     }
-
-    // Listen for auth state changes (token refresh, sign out, etc.)
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
-        set({ session, user: session?.user ?? null });
-      } else if (event === 'SIGNED_OUT') {
-        set({ session: null, user: null });
-      }
-    });
   },
 
   signIn: async (email, password) => {
