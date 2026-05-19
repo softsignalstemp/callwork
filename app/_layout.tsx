@@ -1,3 +1,4 @@
+import 'react-native-url-polyfill/auto';
 import 'react-native-reanimated';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';

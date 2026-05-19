@@ -21,6 +21,9 @@
     "preview": {
       "distribution": "internal",
       "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://jehttzpkiotfctwkrhde.supabase.co"
+      },
       "ios": {
         "buildConfiguration": "Release"
       }
@@ -28,6 +31,9 @@
     "production": {
       "autoIncrement": true,
       "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://jehttzpkiotfctwkrhde.supabase.co"
+      },
       "ios": {
         "buildConfiguration": "Release"
       }
