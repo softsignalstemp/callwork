@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import { hapticImpact } from '@/utils/haptics';
+import { ImpactFeedbackStyle } from 'expo-haptics';
 import { Text, FAB } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -8,6 +10,7 @@ import { useLavoriStore } from '@/store/useLavoriStore';
 import { useMonthlyStats } from '@/hooks/useMonthlyStats';
 import { DatoreCard } from '@/components/jobs/DatoreCard';
 import { SessioneCard } from '@/components/jobs/SessioneCard';
+import { SwipeableDelete } from '@/components/ui/SwipeableDelete';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LiquidGlassSegmented } from '@/components/ui/LiquidGlassSegmented';
 import { DecorShape } from '@/components/ui/DecorShape';
@@ -24,14 +27,10 @@ export default function LavoriScreen() {
   const [fabOpen, setFabOpen] = useState(false);
 
   const confirmDeleteDatore = (id: string, nome: string) => {
-    Alert.alert(
-      'Elimina datore',
-      `Eliminare "${nome}" e tutti i suoi turni?`,
-      [
-        { text: 'Annulla', style: 'cancel' },
-        { text: 'Elimina', style: 'destructive', onPress: () => rimuoviDatore(id) },
-      ]
-    );
+    Alert.alert('Elimina datore', `Eliminare "${nome}" e tutti i suoi turni?`, [
+      { text: 'Annulla', style: 'cancel' },
+      { text: 'Elimina', style: 'destructive', onPress: () => rimuoviDatore(id) },
+    ]);
   };
 
   const confirmDeleteTurno = (id: string) => {
@@ -61,20 +60,27 @@ export default function LavoriScreen() {
         />
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 110 + insets.bottom }}>
+      {/* Fade bridge header→lista */}
+      <LinearGradient
+        colors={[Colors.bg, Colors.bg + '00']}
+        style={styles.headerFade}
+        pointerEvents="none"
+      />
+      <ScrollView contentContainerStyle={{ paddingTop: 8, paddingHorizontal: 16, paddingBottom: 110 + insets.bottom }} showsVerticalScrollIndicator={false}>
         {activeTab === 'datori' && (
           <>
             {datori.length === 0 ? (
               <EmptyState icon="🏢" title="Nessun datore" subtitle="Tocca + per aggiungere il primo datore" />
             ) : (
               datori.map((d) => (
-                <DatoreCard
-                  key={d.id}
-                  datore={d}
-                  guadagnoMese={stats.perDatore[d.id]?.guadagno ?? 0}
-                  numSessioni={sessioni.filter((s) => s.datoreId === d.id).length}
-                  onDelete={() => confirmDeleteDatore(d.id, d.nome)}
-                />
+                <SwipeableDelete key={d.id} onDelete={() => confirmDeleteDatore(d.id, d.nome)}>
+                  <DatoreCard
+                    datore={d}
+                    guadagnoMese={stats.perDatore[d.id]?.guadagno ?? 0}
+                    numSessioni={sessioni.filter((s) => s.datoreId === d.id).length}
+                    onEdit={() => router.push(`/lavori/modifica-datore?id=${d.id}`)}
+                  />
+                </SwipeableDelete>
               ))
             )}
           </>
@@ -88,13 +94,14 @@ export default function LavoriScreen() {
               sessioni.map((s) => {
                 const d = datori.find((d) => d.id === s.datoreId);
                 return (
-                  <SessioneCard
-                    key={s.id}
-                    sessione={s}
-                    nomeAdatore={d?.nome}
-                    coloreDatore={d?.colore}
-                    onDelete={() => confirmDeleteTurno(s.id)}
-                  />
+                  <SwipeableDelete key={s.id} onDelete={() => confirmDeleteTurno(s.id)}>
+                    <SessioneCard
+                      sessione={s}
+                      nomeAdatore={d?.nome}
+                      coloreDatore={d?.colore}
+                      onEdit={() => router.push(`/lavori/modifica-sessione?id=${s.id}`)}
+                    />
+                  </SwipeableDelete>
                 );
               })
             )}
@@ -112,21 +119,21 @@ export default function LavoriScreen() {
           {
             icon: 'briefcase-plus',
             label: 'Nuovo datore',
-            onPress: () => { setFabOpen(false); router.push('/lavori/nuovo-datore'); },
+            onPress: () => { hapticImpact(ImpactFeedbackStyle.Medium); setFabOpen(false); router.push('/lavori/nuovo-datore'); },
             style: { backgroundColor: Colors.card },
             color: Colors.primary,
-            labelStyle: { backgroundColor: Colors.card, color: Colors.text },
+            labelStyle: { backgroundColor: 'transparent', color: Colors.text },
           },
           {
             icon: 'clock-plus',
             label: 'Registra turno',
-            onPress: () => { setFabOpen(false); router.push('/lavori/registra'); },
+            onPress: () => { hapticImpact(ImpactFeedbackStyle.Medium); setFabOpen(false); router.push('/lavori/registra'); },
             style: { backgroundColor: Colors.card },
             color: Colors.primaryGlow,
-            labelStyle: { backgroundColor: Colors.card, color: Colors.text },
+            labelStyle: { backgroundColor: 'transparent', color: Colors.text },
           },
         ]}
-        onStateChange={({ open }) => setFabOpen(open)}
+        onStateChange={({ open }) => { if (open) hapticImpact(ImpactFeedbackStyle.Medium); setFabOpen(open); }}
         style={{ bottom: insets.bottom + 80 }}
       />
     </View>
@@ -137,4 +144,5 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   header: { paddingHorizontal: 20, paddingBottom: 20, gap: 14 },
   title: { color: Colors.text, fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  headerFade: { height: 24, marginBottom: -24, zIndex: 2 },
 });

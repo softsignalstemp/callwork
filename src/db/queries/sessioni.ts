@@ -49,6 +49,24 @@ export function insertSessione(s: Omit<Sessione, 'creatoIl'>) {
   );
 }
 
+export function getSessioneById(id: string): Sessione | null {
+  const row = getDb().getFirstSync('SELECT * FROM sessioni WHERE id = ?', [id]) as Record<string, unknown> | null;
+  return row ? rowToSessione(row) : null;
+}
+
+export function updateSessione(s: Omit<Sessione, 'creatoIl'>) {
+  const oreTotali = isFinite(s.oreTotali) ? s.oreTotali : 0;
+  const guadagno = isFinite(s.guadagno) ? s.guadagno : 0;
+  getDb().runSync(
+    `UPDATE sessioni SET datore_id=?, data=?, ora_inizio=?, ora_fine=?,
+     pausa_inizio=?, pausa_fine=?, ore_totali=?, guadagno=?, note=?, confermato=?
+     WHERE id=?`,
+    [s.datoreId, s.data, s.oraInizio, s.oraFine,
+     s.pausaInizio ?? null, s.pausaFine ?? null,
+     oreTotali, guadagno, s.note ?? null, s.confermato ? 1 : 0, s.id]
+  );
+}
+
 export function deleteSessione(id: string) {
   getDb().runSync('DELETE FROM sessioni WHERE id = ?', [id]);
 }

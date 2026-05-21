@@ -14,8 +14,16 @@ export function calcOre(oraInizio: string, oraFine: string): number {
   const [ih, im] = parts(oraInizio);
   const [fh, fm] = parts(oraFine);
   if ([ih, im, fh, fm].some((n) => !isFinite(n))) return 0;
-  const minuti = (fh * 60 + fm) - (ih * 60 + im);
-  return Math.max(0, minuti / 60);
+  let minuti = (fh * 60 + fm) - (ih * 60 + im);
+  // Turno notturno: fine il giorno dopo
+  if (minuti <= 0) minuti += 24 * 60;
+  return minuti / 60;
+}
+
+export function isOvernightShift(oraInizio: string, oraFine: string): boolean {
+  const [ih, im] = oraInizio.split(':').map(Number);
+  const [fh, fm] = oraFine.split(':').map(Number);
+  return (fh * 60 + fm) <= (ih * 60 + im);
 }
 
 export function calcGuadagno(ore: number, pagaOraria: number): number {

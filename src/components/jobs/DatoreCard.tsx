@@ -11,10 +11,10 @@ interface DatoreCardProps {
   guadagnoMese?: number;
   numSessioni?: number;
   onPress?: () => void;
-  onDelete?: () => void;
+  onEdit?: () => void;
 }
 
-export function DatoreCard({ datore, guadagnoMese = 0, numSessioni = 0, onPress, onDelete }: DatoreCardProps) {
+export function DatoreCard({ datore, guadagnoMese = 0, numSessioni = 0, onPress, onEdit }: DatoreCardProps) {
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={[styles.card, { shadowColor: datore.colore }]}>
       <LinearGradient
@@ -40,12 +40,12 @@ export function DatoreCard({ datore, guadagnoMese = 0, numSessioni = 0, onPress,
           </Text>
         </View>
       </View>
-      {onDelete && (
+      {onEdit && (
         <IconButton
-          icon="delete-outline"
-          size={18}
-          iconColor={Colors.textMuted}
-          onPress={onDelete}
+          icon="pencil"
+          size={20}
+          iconColor={Colors.textSecondary}
+          onPress={onEdit}
         />
       )}
     </TouchableOpacity>

@@ -10,6 +10,10 @@ function rowToDatore(row: Record<string, unknown>): Datore {
     colore: row.colore as string,
     creatoIl: row.creato_il as string,
     aggiornato: row.aggiornato as string,
+    strAbilitato: !!row.str_abilitato,
+    strSogliaOre: row.str_soglia_ore as number | undefined,
+    strMoltiplicatore: row.str_moltiplicatore as number | undefined,
+    strPagaOraria: row.str_paga_oraria != null ? (row.str_paga_oraria as number) : undefined,
   };
 }
 
@@ -26,16 +30,22 @@ export function getDatore(id: string): Datore | null {
 export function insertDatore(d: Omit<Datore, 'creatoIl' | 'aggiornato'>) {
   const now = new Date().toISOString();
   getDb().runSync(
-    'INSERT INTO datori (id, nome, paga_oraria, descrizione, colore, creato_il, aggiornato) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [d.id, d.nome, d.pagaOraria, d.descrizione ?? null, d.colore, now, now]
+    `INSERT INTO datori (id, nome, paga_oraria, descrizione, colore, str_abilitato, str_soglia_ore, str_moltiplicatore, str_paga_oraria, creato_il, aggiornato)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [d.id, d.nome, d.pagaOraria, d.descrizione ?? null, d.colore,
+     d.strAbilitato ? 1 : 0, d.strSogliaOre ?? 8, d.strMoltiplicatore ?? 1.5,
+     d.strPagaOraria ?? null, now, now]
   );
 }
 
 export function updateDatore(d: Omit<Datore, 'creatoIl'>) {
   const now = new Date().toISOString();
   getDb().runSync(
-    'UPDATE datori SET nome = ?, paga_oraria = ?, descrizione = ?, colore = ?, aggiornato = ? WHERE id = ?',
-    [d.nome, d.pagaOraria, d.descrizione ?? null, d.colore, now, d.id]
+    `UPDATE datori SET nome = ?, paga_oraria = ?, descrizione = ?, colore = ?,
+     str_abilitato = ?, str_soglia_ore = ?, str_moltiplicatore = ?, str_paga_oraria = ?, aggiornato = ? WHERE id = ?`,
+    [d.nome, d.pagaOraria, d.descrizione ?? null, d.colore,
+     d.strAbilitato ? 1 : 0, d.strSogliaOre ?? 8, d.strMoltiplicatore ?? 1.5,
+     d.strPagaOraria ?? null, now, d.id]
   );
 }
 

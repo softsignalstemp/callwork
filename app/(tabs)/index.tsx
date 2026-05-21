@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import React, { useEffect, useCallback } from 'react';
+import { View, ScrollView, StyleSheet, RefreshControl, Platform } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,17 +14,30 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLavoriStore } from '@/store/useLavoriStore';
 import { useMonthlyStats } from '@/hooks/useMonthlyStats';
-import { StatCard } from '@/components/ui/StatCard';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { SessioneCard } from '@/components/jobs/SessioneCard';
+import { LiveShiftCard } from '@/components/jobs/LiveShiftCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LineChart } from '@/components/charts/LineChart';
 import { RingChart } from '@/components/charts/RingChart';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
+import { hapticSelection } from '@/utils/haptics';
 import { formatEuro, formatOre, monthLabel, prevMonth, nextMonth } from '@/utils/formatters';
 import { DecorShape } from '@/components/ui/DecorShape';
 import { Colors } from '@/constants/colors';
+
+function StatPill({ value, label, accent }: { value: string; label: string; accent: string }) {
+  return (
+    <View style={[pill.wrap, { borderColor: accent + '33' }]}>
+      <BlurView intensity={Platform.OS === 'ios' ? 40 : 0} tint="dark" style={StyleSheet.absoluteFill} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: accent + '14', borderRadius: 16 }]} />
+      <View style={pill.shine} />
+      <Text style={[pill.value, { color: accent }]}>{value}</Text>
+      <Text style={pill.label}>{label}</Text>
+    </View>
+  );
+}
 
 function useFadeIn(delayMs = 0) {
   const opacity = useSharedValue(0);
@@ -39,12 +53,19 @@ export default function HomeScreen() {
   const { meseSelezionato, cambiaMese, datori, sessioni, caricaDati } = useLavoriStore();
   const stats = useMonthlyStats();
   const [refreshing, setRefreshing] = React.useState(false);
+  const [scrollEnabled, setScrollEnabled] = React.useState(true);
 
   const s0 = useFadeIn(0);
   const s1 = useFadeIn(100);
   const s2 = useFadeIn(180);
   const s3 = useFadeIn(260);
   const s4 = useFadeIn(340);
+
+  useFocusEffect(
+    useCallback(() => {
+      caricaDati();
+    }, [caricaDati])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -62,6 +83,8 @@ export default function HomeScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={{ paddingBottom: 100 + insets.bottom, gap: 12 }}
+      showsVerticalScrollIndicator={false}
+      scrollEnabled={scrollEnabled}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
     >
       {/* ── HERO ── */}
@@ -78,10 +101,10 @@ export default function HomeScreen() {
       >
         <View style={styles.monthRow}>
           <IconButton icon="chevron-left" iconColor={Colors.textSecondary} size={22}
-            onPress={() => cambiaMese(prevMonth(meseSelezionato))} />
+            onPress={() => { hapticSelection(); cambiaMese(prevMonth(meseSelezionato)); }} />
           <Text style={styles.monthLabel}>{monthLabel(meseSelezionato)}</Text>
           <IconButton icon="chevron-right" iconColor={Colors.textSecondary} size={22}
-            onPress={() => cambiaMese(nextMonth(meseSelezionato))} />
+            onPress={() => { hapticSelection(); cambiaMese(nextMonth(meseSelezionato)); }} />
         </View>
 
         <Animated.View style={[styles.heroEarnings, s0]}>
@@ -95,19 +118,21 @@ export default function HomeScreen() {
         </Animated.View>
       </LinearGradient>
 
-      {/* ── LINE CHART — mese corrente ── */}
+      {/* ── LINE CHART + STAT PILLS ── */}
       <Animated.View style={s1}>
         <GlassCard style={styles.section} glow>
           <Text style={styles.sectionTitle}>Andamento del mese</Text>
-          <LineChart data={stats.daysOfMonth} />
+          <LineChart data={stats.daysOfMonth} onScrollLock={(locked) => setScrollEnabled(!locked)} />
+          <View style={styles.chartDivider} />
+          <View style={styles.pillRow}>
+            <StatPill value={formatOre(stats.oreTotali)} label="Ore lavorate" accent={Colors.primary} />
+            <StatPill value={String(stats.giorniLavorati)} label="Giorni lavorati" accent={Colors.confirmed} />
+          </View>
         </GlassCard>
       </Animated.View>
 
-      {/* ── STAT CARDS ── */}
-      <Animated.View style={[styles.statsRow, s2]}>
-        <StatCard icon="⏱" value={formatOre(stats.oreTotali)} label="Ore lavorate" accent={Colors.primary} />
-        <StatCard icon="📅" value={String(stats.giorniLavorati)} label="Giorni lavorati" accent={Colors.confirmed} />
-      </Animated.View>
+      {/* ── LIVE SHIFT ── */}
+      <LiveShiftCard sessioni={sessioni} datori={datori} />
 
       {/* ── QUICK REGISTER BUTTON ── */}
       <Animated.View style={[styles.quickRegWrap, s2]}>
@@ -146,18 +171,20 @@ export default function HomeScreen() {
             subtitle='Usa il tasto "Registra lavoro" qui sopra'
           />
         ) : (
-          <View style={styles.sessionList}>
-            {ultimeSessioni.map((s) => {
-              const d = datori.find((d) => d.id === s.datoreId);
-              return (
-                <SessioneCard
-                  key={s.id}
-                  sessione={s}
-                  nomeAdatore={d?.nome}
-                  coloreDatore={d?.colore}
-                />
-              );
-            })}
+          <View>
+            <View style={styles.sessionList}>
+              {ultimeSessioni.map((s) => {
+                const d = datori.find((d) => d.id === s.datoreId);
+                return (
+                  <SessioneCard
+                    key={s.id}
+                    sessione={s}
+                    nomeAdatore={d?.nome}
+                    coloreDatore={d?.colore}
+                  />
+                );
+              })}
+            </View>
           </View>
         )}
       </Animated.View>
@@ -225,10 +252,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
 
-  statsRow: {
+  pillRow: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
+    gap: 5,
+    marginTop: 6,
+    marginBottom: -15,
+    marginHorizontal: -15,
   },
 
   section: { marginHorizontal: 16, padding: 20 },
@@ -251,6 +280,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
   },
+  chartDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Colors.border,
+    marginTop: 14,
+    marginHorizontal: -20,
+    opacity: 0.8,
+  },
   emptyChart: { height: 80, alignItems: 'center', justifyContent: 'center' },
   sessionList: { paddingHorizontal: 16, gap: 4 },
+});
+
+const pill = StyleSheet.create({
+  wrap: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    gap: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
+  },
+  shine: {
+    position: 'absolute',
+    top: 0,
+    left: 12,
+    right: 12,
+    height: 1,
+    backgroundColor: '#ffffff',
+    opacity: 0.15,
+    borderRadius: 1,
+  },
+  value: { fontSize: 18, fontWeight: '800', letterSpacing: -0.5 },
+  label: { fontSize: 11, color: Colors.textSecondary, fontWeight: '600', letterSpacing: 0.2 },
 });

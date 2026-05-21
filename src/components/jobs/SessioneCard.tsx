@@ -22,6 +22,14 @@ function timeToH(hhmm: string): number {
   return h + m / 60;
 }
 
+function todayISO(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 // ─── Mini time-of-day bar ─────────────────────────────────────────────────────
 
 function TimeBar({
@@ -81,11 +89,17 @@ interface SessioneCardProps {
   sessione: Sessione;
   nomeAdatore?: string;
   coloreDatore?: string;
-  onDelete?: () => void;
+  onEdit?: () => void;
 }
 
-export function SessioneCard({ sessione, nomeAdatore, coloreDatore, onDelete }: SessioneCardProps) {
-  const accentColor = coloreDatore ?? (sessione.confermato ? Colors.confirmed : Colors.worked);
+export function SessioneCard({ sessione, nomeAdatore, coloreDatore, onEdit }: SessioneCardProps) {
+  const isFuture = sessione.data > todayISO();
+  const isPending = !sessione.confermato && isFuture;
+  const accentColor = coloreDatore ?? (
+    sessione.confermato ? Colors.confirmed :
+    isPending ? Colors.available :
+    Colors.worked
+  );
 
   return (
     <View style={[styles.card, { shadowColor: accentColor }]}>
@@ -98,18 +112,15 @@ export function SessioneCard({ sessione, nomeAdatore, coloreDatore, onDelete }: 
           <Text style={styles.nome} numberOfLines={1}>{nomeAdatore ?? '—'}</Text>
           <View style={[
             styles.statusBadge,
-            { backgroundColor: sessione.confermato ? Colors.confirmed + '22' : Colors.available + '22' }
+            { backgroundColor: accentColor + '22' }
           ]}>
             <MaterialCommunityIcons
-              name={sessione.confermato ? 'check-circle' : 'clock-outline'}
+              name={sessione.confermato ? 'check-circle' : isPending ? 'clock-outline' : 'check-circle-outline'}
               size={11}
-              color={sessione.confermato ? Colors.confirmed : Colors.available}
+              color={accentColor}
             />
-            <Text style={[
-              styles.statusText,
-              { color: sessione.confermato ? Colors.confirmed : Colors.available }
-            ]}>
-              {sessione.confermato ? 'Confermato' : 'In attesa'}
+            <Text style={[styles.statusText, { color: accentColor }]}>
+              {sessione.confermato ? 'Confermato' : isPending ? 'In attesa' : 'Svolto'}
             </Text>
           </View>
         </View>
@@ -160,14 +171,16 @@ export function SessioneCard({ sessione, nomeAdatore, coloreDatore, onDelete }: 
             {' '}{sessione.note}
           </Text>
         )}
+
+
       </View>
 
-      {onDelete && (
+      {onEdit && (
         <IconButton
-          icon="delete-outline"
-          size={18}
-          iconColor={Colors.textMuted}
-          onPress={onDelete}
+          icon="pencil"
+          size={20}
+          iconColor={Colors.textSecondary}
+          onPress={onEdit}
           style={styles.deleteBtn}
         />
       )}

@@ -67,6 +67,10 @@ export function initDb(): void {
   // Migrations for existing DBs — only suppresses duplicate-column errors
   safeAlter(database, `ALTER TABLE sessioni ADD COLUMN pausa_inizio TEXT`);
   safeAlter(database, `ALTER TABLE sessioni ADD COLUMN pausa_fine TEXT`);
+  safeAlter(database, `ALTER TABLE datori ADD COLUMN str_abilitato INTEGER DEFAULT 0`);
+  safeAlter(database, `ALTER TABLE datori ADD COLUMN str_soglia_ore REAL DEFAULT 8`);
+  safeAlter(database, `ALTER TABLE datori ADD COLUMN str_moltiplicatore REAL DEFAULT 1.5`);
+  safeAlter(database, `ALTER TABLE datori ADD COLUMN str_paga_oraria REAL DEFAULT NULL`);
 
   database.execSync(
     `CREATE TABLE IF NOT EXISTS disponibilita (

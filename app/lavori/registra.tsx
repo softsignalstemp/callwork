@@ -4,14 +4,19 @@ import { Text, TextInput, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { hapticImpact, hapticNotification } from '@/utils/haptics';
+import { ImpactFeedbackStyle } from 'expo-haptics';
 import { useLavoriStore } from '@/store/useLavoriStore';
+import { useSettingsStore } from '@/store/useSettingsStore';
 import { TimePickerField, DatePickerField } from '@/components/ui/PickerField';
-import { calcOreNette, calcGuadagno, formatEuro, formatOre, today } from '@/utils/formatters';
+import { calcOreNette, formatEuro, formatOre, today, isOvernightShift } from '@/utils/formatters';
+import { calcolaConStraordinari } from '@/utils/straordinari';
 import { Colors } from '@/constants/colors';
 
 export default function RegistraScreen() {
   const router = useRouter();
   const { datori, aggiungiSessione } = useLavoriStore();
+  const straordinariConfig = useSettingsStore((s) => s.straordinari);
 
   const [datoreId, setDatoreId] = useState('');
   const [data, setData] = useState(today());
@@ -24,6 +29,10 @@ export default function RegistraScreen() {
 
   const [pagaOverrideStr, setPagaOverrideStr] = useState('');
   const [pagaExpanded, setPagaExpanded] = useState(false);
+
+  useEffect(() => {
+    hapticImpact(ImpactFeedbackStyle.Medium);
+  }, []);
 
   // Auto-select the only datore
   useEffect(() => {
@@ -45,7 +54,23 @@ export default function RegistraScreen() {
     () => calcOreNette(oraInizio, oraFine, hasPausa ? pausaInizio : undefined, hasPausa ? pausaFine : undefined),
     [oraInizio, oraFine, hasPausa, pausaInizio, pausaFine]
   );
-  const guadagno = useMemo(() => calcGuadagno(oreNette, pagaOraria), [oreNette, pagaOraria]);
+  const effectiveStrConfig = useMemo(() => {
+    if (datore?.strAbilitato) {
+      return {
+        abilitato: true,
+        sogliaDiariaOre: datore.strSogliaOre ?? 8,
+        moltiplicatore: datore.strMoltiplicatore ?? 1.5,
+        pagaOrariaStraordinario: datore.strPagaOraria,
+      };
+    }
+    return straordinariConfig;
+  }, [datore, straordinariConfig]);
+
+  const calcoloStr = useMemo(
+    () => calcolaConStraordinari(oreNette, pagaOraria, effectiveStrConfig),
+    [oreNette, pagaOraria, effectiveStrConfig]
+  );
+  const guadagno = calcoloStr.totale;
 
   const handleDatoreChange = (id: string) => {
     setDatoreId(id);
@@ -66,6 +91,7 @@ export default function RegistraScreen() {
       note: note.trim() || undefined,
       confermato: false,
     });
+    hapticNotification();
     router.back();
   };
 
@@ -79,7 +105,7 @@ export default function RegistraScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.container} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
       {/* ── DATORE ─────────────────────────────────────── */}
       {datori.length !== 1 && (
@@ -216,11 +242,26 @@ export default function RegistraScreen() {
             <Text style={styles.summaryEq}>=</Text>
             <Text style={styles.summaryGuadagno}>{formatEuro(guadagno)}</Text>
           </View>
-          <Text style={styles.summaryDetail}>
-            {formatEuro(pagaOraria)}/h × {oreNette.toFixed(2)}h
-            {hasPausa && <Text style={{ color: Colors.textMuted }}> (pausa {pausaInizio}–{pausaFine})</Text>}
-            {isOverride && <Text style={{ color: Colors.available }}> · paga modificata</Text>}
-          </Text>
+
+          {calcoloStr.hasStraordinari ? (
+            <>
+              <Text style={styles.summaryDetail}>
+                {formatOre(calcoloStr.oreOrdinarie)} × {formatEuro(pagaOraria)}/h = {formatEuro(calcoloStr.compensoOrdinario)}
+              </Text>
+              <Text style={[styles.summaryDetail, { color: Colors.available }]}>
+                {formatOre(calcoloStr.oreStraordinarie)} × {formatEuro(
+                  effectiveStrConfig.pagaOrariaStraordinario ?? pagaOraria * effectiveStrConfig.moltiplicatore
+                )}/h = {formatEuro(calcoloStr.compensoStraordinario)}
+                {'  '}⚡
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.summaryDetail}>
+              {formatEuro(pagaOraria)}/h × {oreNette.toFixed(2)}h
+              {hasPausa && <Text style={{ color: Colors.textMuted }}> (pausa {pausaInizio}–{pausaFine})</Text>}
+              {isOverride && <Text style={{ color: Colors.available }}> · paga modificata</Text>}
+            </Text>
+          )}
         </View>
       )}
 
@@ -231,10 +272,10 @@ export default function RegistraScreen() {
         </View>
       )}
 
-      {!hasPausa && oreNette <= 0 && oraFine <= oraInizio && (
-        <View style={styles.warningBox}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={16} color={Colors.error} />
-          <Text style={styles.warningText}>L'ora di fine è precedente all'inizio</Text>
+      {!hasPausa && isOvernightShift(oraInizio, oraFine) && (
+        <View style={[styles.warningBox, { borderColor: Colors.available + '44', backgroundColor: Colors.available + '12' }]}>
+          <MaterialCommunityIcons name="moon-waning-crescent" size={16} color={Colors.available} />
+          <Text style={[styles.warningText, { color: Colors.available }]}>Turno notturno — termina il giorno dopo</Text>
         </View>
       )}
 

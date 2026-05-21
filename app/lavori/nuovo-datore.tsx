@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, Alert, TouchableOpacity } from 'react-nat
 import { Text, TextInput, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { hapticNotification } from '@/utils/haptics';
 import { useLavoriStore } from '@/store/useLavoriStore';
 import { formatEuro } from '@/utils/formatters';
 import { Colors } from '@/constants/colors';
@@ -39,6 +40,10 @@ export default function NuovoDatoreScreen() {
   const [pagaOraria, setPagaOraria] = useState('');
   const [descrizione, setDescrizione] = useState('');
   const [colore, setColore] = useState(COLORI_PRESET[0]);
+  const [strAbilitato, setStrAbilitato] = useState(false);
+  const [strSogliaStr, setStrSogliaStr] = useState('8');
+  const [strPagaOrariaStr, setStrPagaOrariaStr] = useState('');
+  const [strExpanded, setStrExpanded] = useState(false);
 
   const salva = () => {
     if (!nome.trim()) {
@@ -50,7 +55,15 @@ export default function NuovoDatoreScreen() {
       Alert.alert('Paga non valida', 'Inserisci una paga oraria valida (es. 11.50).');
       return;
     }
-    aggiungiDatore({ nome: nome.trim(), pagaOraria: paga, descrizione: descrizione.trim() || undefined, colore });
+    const soglia = parseFloat(strSogliaStr.replace(',', '.'));
+    const strPagaOraria = parseFloat(strPagaOrariaStr.replace(',', '.'));
+    aggiungiDatore({
+      nome: nome.trim(), pagaOraria: paga, descrizione: descrizione.trim() || undefined, colore,
+      strAbilitato, strSogliaOre: strAbilitato && isFinite(soglia) ? soglia : 8,
+      strMoltiplicatore: 1.5,
+      strPagaOraria: strAbilitato && isFinite(strPagaOraria) && strPagaOraria > 0 ? strPagaOraria : undefined,
+    });
+    hapticNotification();
     router.back();
   };
 
@@ -58,7 +71,7 @@ export default function NuovoDatoreScreen() {
   const pagaValida = isFinite(pagaNum) && pagaNum > 0;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.container} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
       {/* ── NOME ────────────────────────────────────────── */}
       <SectionLabel text="Nome datore" required />
@@ -95,6 +108,77 @@ export default function NuovoDatoreScreen() {
         <Text style={styles.pagaHint}>
           8h al giorno → {formatEuro(pagaNum * 8)} · 40h sett → {formatEuro(pagaNum * 40)}
         </Text>
+      )}
+
+      {/* ── STRAORDINARI (collassabile, subito dopo paga oraria) ── */}
+      <TouchableOpacity
+        onPress={() => setStrExpanded(v => !v)}
+        activeOpacity={0.75}
+        style={[styles.strRow, strAbilitato && { borderColor: Colors.available, backgroundColor: Colors.available + '0E' }]}
+      >
+        <MaterialCommunityIcons name="clock-alert-outline" size={18} color={strAbilitato ? Colors.available : Colors.textMuted} />
+        <Text style={[styles.strLabel, { color: strAbilitato ? Colors.available : Colors.textSecondary }]}>
+          Straordinari{strAbilitato ? ` · >${strSogliaStr}h${strPagaOrariaStr ? ` · ${strPagaOrariaStr}€/h` : ''}` : ''}
+        </Text>
+        <MaterialCommunityIcons name={strExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
+      </TouchableOpacity>
+
+      {strExpanded && (
+        <View style={styles.strBox}>
+          {/* Toggle */}
+          <View style={styles.strToggleRow}>
+            <Text style={styles.strBoxLabel}>Attiva straordinari</Text>
+            <TouchableOpacity
+              onPress={() => setStrAbilitato(v => !v)}
+              style={[styles.strToggle, strAbilitato && { backgroundColor: Colors.available + '22', borderColor: Colors.available }]}
+              activeOpacity={0.75}
+            >
+              <MaterialCommunityIcons
+                name={strAbilitato ? 'checkbox-marked-circle' : 'checkbox-blank-circle-outline'}
+                size={20} color={strAbilitato ? Colors.available : Colors.textMuted}
+              />
+              <Text style={[styles.strToggleText, { color: strAbilitato ? Colors.available : Colors.textSecondary }]}>
+                {strAbilitato ? 'Sì' : 'No'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {strAbilitato && (
+            <>
+              {/* Soglia */}
+              <View style={styles.strFieldRow}>
+                <Text style={styles.strFieldLabel}>Ore ordinarie/giorno</Text>
+                <TextInput
+                  value={strSogliaStr}
+                  onChangeText={setStrSogliaStr}
+                  mode="outlined"
+                  keyboardType="decimal-pad"
+                  style={styles.strInput}
+                  right={<TextInput.Affix text="h" textStyle={{ color: Colors.textSecondary }} />}
+                  textColor={Colors.text}
+                  theme={{ colors: { primary: Colors.available, outline: Colors.border, onSurfaceVariant: Colors.textSecondary, background: Colors.card } }}
+                />
+              </View>
+
+              {/* Paga oraria straordinari */}
+              <View style={styles.strFieldRow}>
+                <Text style={styles.strFieldLabel}>Paga straordinari</Text>
+                <TextInput
+                  value={strPagaOrariaStr}
+                  onChangeText={setStrPagaOrariaStr}
+                  mode="outlined"
+                  keyboardType="decimal-pad"
+                  placeholder={pagaNum > 0 ? String((pagaNum * 1.5).toFixed(2)) : 'es. 17.00'}
+                  placeholderTextColor={Colors.textMuted}
+                  style={styles.strInput}
+                  right={<TextInput.Affix text="€/h" textStyle={{ color: Colors.textSecondary }} />}
+                  textColor={Colors.text}
+                  theme={{ colors: { primary: Colors.available, outline: Colors.border, onSurfaceVariant: Colors.textSecondary, background: Colors.card } }}
+                />
+              </View>
+            </>
+          )}
+        </View>
       )}
 
       {/* ── COLORE ──────────────────────────────────────── */}
@@ -221,6 +305,21 @@ const styles = StyleSheet.create({
   previewPillRow: { flexDirection: 'row', marginTop: 4 },
   previewPill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
   previewPillText: { fontSize: 12, fontWeight: '700' },
+
+  strRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: Colors.card, borderRadius: 12, borderWidth: 1,
+    borderColor: Colors.border, padding: 12,
+  },
+  strLabel: { flex: 1, fontSize: 13, fontWeight: '600' },
+  strBox: { backgroundColor: Colors.card, borderRadius: 12, padding: 14, gap: 14, borderWidth: 1, borderColor: Colors.border },
+  strToggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  strBoxLabel: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  strToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1.5, borderColor: Colors.border },
+  strToggleText: { fontSize: 13, fontWeight: '700' },
+  strFieldRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  strFieldLabel: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600', flex: 1 },
+  strInput: { width: 110, backgroundColor: Colors.card, height: 44 },
 
   actions: { gap: 8, marginTop: 16 },
   saveBtn: { borderRadius: 14 },

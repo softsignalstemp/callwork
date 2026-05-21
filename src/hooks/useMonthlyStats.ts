@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { useLavoriStore } from '@/store/useLavoriStore';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { calcolaStatStraordinari } from '@/utils/straordinari';
 
 export interface DayData {
   day: number;
@@ -9,6 +11,7 @@ export interface DayData {
 
 export function useMonthlyStats() {
   const { sessioni, datori, meseSelezionato } = useLavoriStore();
+  const straordinariConfig = useSettingsStore((s) => s.straordinari);
 
   return useMemo(() => {
     const totaleGuadagnato = sessioni.reduce((sum, s) => sum + s.guadagno, 0);
@@ -32,7 +35,6 @@ export function useMonthlyStats() {
 
     // All days 1..today (or end of month for past months)
     const [year, month] = meseSelezionato.split('-').map(Number);
-    // Current month: days 1..today. Past months: full month.
     const now = new Date();
     const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
     const lastDay = isCurrentMonth ? now.getDate() : new Date(year, month, 0).getDate();
@@ -42,10 +44,15 @@ export function useMonthlyStats() {
       return { day, date, guadagno: perGiorno[date] ?? 0 };
     });
 
+    const { oreStraordinarie, compensoStraordinario } = calcolaStatStraordinari(sessioni, straordinariConfig);
+
     return {
       totaleGuadagnato, oreTotali, giorniLavorati,
       perGiorno, perDatore, daysOfMonth,
       mese: meseSelezionato,
+      oreStraordinarie,
+      compensoStraordinario,
+      straordinariAbilitati: straordinariConfig.abilitato,
     };
-  }, [sessioni, datori, meseSelezionato]);
+  }, [sessioni, datori, meseSelezionato, straordinariConfig]);
 }

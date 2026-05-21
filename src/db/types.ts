@@ -6,6 +6,10 @@ export interface Datore {
   colore: string;
   creatoIl: string;
   aggiornato: string;
+  strAbilitato?: boolean;
+  strSogliaOre?: number;
+  strMoltiplicatore?: number;
+  strPagaOraria?: number;
 }
 
 export interface Lavoro {
